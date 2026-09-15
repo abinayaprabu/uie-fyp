@@ -1,0 +1,14 @@
+removed_feature,kept_feature,pearson_r
+dissimilarity,edge_density,0.9498603652762919
+entropy,rms_contrast,0.9152900177652944
+gradient,edge_density,0.9772840978981158
+energy,glcm_variance,0.9362426918187802
+colorfulness,mean_saturation,0.9668110650204093
+ASM,glcm_variance,0.9999999999999998
+variance,rms_contrast,0.9867545937022971
+laplacian_variance,contrast,0.9571828957275877
+red_ratio,mean_red,0.9356741127808303
+glcm_entropy,homogeneity,-0.9372708914770761
+std,rms_contrast,1.0
+keypoint_density,edge_density,0.9365454505473249
+mean_green,mean_blue,0.9825368127775794

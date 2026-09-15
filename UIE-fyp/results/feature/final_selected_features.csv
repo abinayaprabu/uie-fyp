@@ -1,0 +1,11 @@
+rank,feature
+1,edge_density
+2,rms_contrast
+3,mean_blue
+4,contrast
+5,mean_saturation
+6,mean_value
+7,homogeneity
+8,mean_red
+9,glcm_variance
+10,dynamic_range

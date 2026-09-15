@@ -1,0 +1,5 @@
+k,features,ssim_r2,ssim_rmse,ssim_mae,ssim_pearson_r,psnr_r2,psnr_rmse,psnr_mae,psnr_pearson_r,avg_R2_SSIM_PSNR_project_defined
+12,"edge_density,rms_contrast,mean_blue,contrast,mean_saturation,mean_value,homogeneity,mean_red,glcm_variance,dynamic_range,correlation,mean",0.485,0.0708,0.0517,0.6965,0.3422,2.2905,1.7314,0.5892,0.4136
+10,"edge_density,rms_contrast,mean_blue,contrast,mean_saturation,mean_value,homogeneity,mean_red,glcm_variance,dynamic_range",0.5108,0.069,0.0505,0.715,0.3595,2.26,1.7108,0.6033,0.4352
+8,"edge_density,rms_contrast,mean_blue,contrast,mean_saturation,mean_value,homogeneity,mean_red",0.5065,0.0693,0.05,0.712,0.3573,2.264,1.712,0.6002,0.4319
+6,"edge_density,rms_contrast,mean_blue,contrast,mean_saturation,mean_value",0.4558,0.0728,0.0525,0.6789,0.3661,2.2485,1.663,0.612,0.4109
