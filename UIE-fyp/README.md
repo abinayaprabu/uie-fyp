@@ -10,7 +10,19 @@ code in this repository — nothing is hand-written or fabricated.
 > It performs **multi-output regression**: from the *preprocessed* image (+ its
 > handcrafted features) it predicts **SSIM** and **PSNR** measured against the
 > UIEB *reference* image. The reference is a **target source only**, never a
-> model input.
+> model input. Equivalently: this is a **no-reference (blind) quality estimator
+> trained to reproduce full-reference metrics**, because in deployment no
+> reference image exists.
+
+**Document map**
+
+| document | purpose |
+|---|---|
+| `README.md` (this file) | the authoritative report — method, results, defects, limitations |
+| `docs/project-flow.md` | **the roadmap**: 9 phases with validation gates, the leakage firewall, ranked upgrade list, thesis chapter mapping, viva pack |
+| `docs/architecture.md` | per-file explanation of every module and why it exists |
+| `docs/plain-language-explanation.md` | the whole project with no assumed background |
+| `docs/methodology-audit.md` | the independent audit: C1 label-scrambling bug, the two feature bugs, H1–H5, L1–L8 and their status |
 
 ---
 
@@ -342,6 +354,15 @@ python scripts/run_baselines.py          # TEST read once -> baseline_metrics.cs
 python scripts/run_ablation.py           # -> ablation_results.csv
 python scripts/make_plots.py             # -> plots/
 ```
+
+Each step above has a **validation gate** that must pass before the next one is
+allowed to consume its output — the gates, the leakage firewall (which split each
+stage may see), and the correct recovery order after a fresh clone are set out in
+`docs/project-flow.md`. In particular: `dataset/` is gitignored, so a fresh clone
+must re-run `download_uieb.py` → `run_preprocessing.py` →
+`build_feature_dataset.py` before any later stage, and
+`feature_quality_dataset.csv` must come out **bit-identical** to the committed
+copy — if it does, Phases 4–5 remain valid and need not be re-run.
 
 Verified end-to-end on Python 3.11 with numpy 2.4.6 / pandas 3.0.5 /
 scikit-learn 1.9.1 / OpenCV 5.0.0 / scikit-image 0.26.0: preprocessing
