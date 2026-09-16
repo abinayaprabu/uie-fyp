@@ -205,8 +205,14 @@ python scripts/validate_dataset.py   # -> dataset_validation_report.csv,
     group-aware splitting, not by silently deleting data.
   * Raw heights range 266–901 px, **all widths are 600 px** → aspect ratio is
     not a confound (this was explicitly tested and disproved).
-  * A perceptual-hash column (`raw_ref_phash_hamming`) is persisted in the
-    validation report as a control, so pairing can be re-verified later.
+  * A perceptual-hash control is persisted in
+    `results/feature/phash_pairing_control.csv` and **re-verified on
+    2026-09-16**: correctly paired raw↔reference images have a median Hamming
+    distance of **2.0** (mean 3.22, max 14), against **32.0** for deliberately
+    mismatched cross-pairs (mean 31.55, 40 sampled). The pairing is therefore
+    ~16× tighter than chance — direct evidence that each raw image is matched to
+    the right reference, which is the assumption every label in the project
+    rests on.
 * **Gate:** 890/890 pairs readable, dimensions match, duplicate groups
   enumerated, contact sheets in `plots/`.
 * **Thesis:** §3.2 Dataset + Table of dataset statistics.
@@ -586,16 +592,16 @@ The three interpretive claims you can defend with evidence already in the repo:
 
 | phase | status |
 |---|---|
-| 0 Environment | ✓ rebuilt 2026-09-16 (torch 2.14.0, cv2 5.0.0, sklearn 1.9.1) |
-| 1 Data | ✓ code + validation reports committed; images re-downloading (they are gitignored, so a fresh clone must re-run `download_uieb.py`) |
+| 0 Environment | ✓ **rebuilt & verified 2026-09-16** (torch 2.14.0+cu130, cv2 5.0.0, sklearn 1.9.1, numpy 2.4.6, pandas 3.0.5, skimage 0.26.0) |
+| 1 Data | ✓ **re-downloaded & verified 2026-09-16** — 890 raw / 890 reference / 60 challenging, filename correspondence OK; all critical dataset checks PASS; phash pairing control PASS (paired median 2.0 vs cross-pair 32.0). Images are gitignored, so a fresh clone must re-run `download_uieb.py`. |
 | 2 Split | ✓ **done** — 623/134/133 committed and verified |
-| 3a Classical enhancement | ✓ code done, reproduces the log exactly; `dataset/preprocessed/` must be regenerated after each clone |
+| 3a Classical enhancement | ✓ **re-run & bit-identical 2026-09-16** — `dataset/preprocessed/` (890 images, 351 MB) regenerated; `preprocessing_log.csv` md5 unchanged |
 | 3b Learned enhancer | ✗ **does not exist** (upgrade U3) |
-| 4 Targets + 25 features | ✓ **done** — bit-for-bit reproducible, 27×890 |
-| 5 Selection | ✓ **done** — corrected labels, 14 features, assertion added |
+| 4 Targets + 25 features | ✓ **re-run & bit-identical 2026-09-16** — checks 3–10 PASS, `feature_quality_dataset.csv` md5 unchanged (27×890) |
+| 5 Selection | ✓ **done** — corrected labels, 14 features, assertion added; **still valid**, because Phase 4 reproduced exactly |
 | 6 Models | ◐ RF ✓, MLP ✓ (both committed with CIs); **image-only CNN ✗, hybrid ✗, ablation C ✗** |
 | 7 Evaluation | ◐ RF + MLP test numbers ✓; CNN test numbers **PENDING**; most plots **PENDING** |
-| 8 Write-up | ◐ README + 3 docs ✓; thesis not started |
+| 8 Write-up | ◐ README + 4 docs ✓; thesis not started |
 
 **The one blocking fact:** the proposed model has no results. Until B3/B4 and
 ablation C are run, the project has a feature-selection study and two baselines,
@@ -605,8 +611,13 @@ but no "proposed model". That is priority 1 and it is purely compute time.
 
 ## 5. Do this, in this order
 
-**Step 1 — Regenerate the intermediates** (~10 min CPU, must happen after every
-fresh environment because `dataset/` is gitignored):
+**Step 1 — Regenerate the intermediates** ✓ **DONE 2026-09-16, gate passed.**
+(~10 min CPU; must be repeated after every fresh environment because `dataset/`
+is gitignored.) Both outputs came back **bit-identical** to the committed copies
+(`feature_quality_dataset.csv` md5 `e90a073fa80865b400009444411f65a0`,
+`preprocessing_log.csv` md5 `b104dd207c47b3cbe2b0b7d0df213dc4`), which means
+**Phase 5 does not need re-running** — the committed 14-feature selection is
+still valid, and the CNN can be trained directly against it.
 
 ```bash
 python scripts/run_preprocessing.py      # -> dataset/preprocessed/
