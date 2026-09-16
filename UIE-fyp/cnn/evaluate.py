@@ -25,8 +25,12 @@ from torch.utils.data import DataLoader
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from cnn.dataset import UIEBQualityDataset  # noqa: E402
 from cnn.model import FeatMLP, HybridCNN, ImageOnlyCNN  # noqa: E402
-from src.config import CNN_BATCH_SIZE, CNN_RESULTS_DIR, MODELS_DIR  # noqa: E402
-from src.metrics import combined_r2, regression_metrics  # noqa: E402
+from src.config import (  # noqa: E402
+    CNN_BATCH_SIZE, CNN_N_BOOTSTRAP, CNN_RESULTS_DIR, MODELS_DIR,
+)
+from src.metrics import (  # noqa: E402
+    bootstrap_r2_ci, combined_r2, regression_metrics,
+)
 
 _BUILDERS = {"hybrid": HybridCNN, "image_only": ImageOnlyCNN, "mlp": FeatMLP}
 
@@ -71,13 +75,20 @@ def evaluate_run(run_tag: str) -> dict:
         "ssim": regression_metrics(y_true[:, 0], y_pred[:, 0]),
         "psnr": regression_metrics(y_true[:, 1], y_pred[:, 1]),
     }
+    # H5: report a bootstrap CI on each test R2. With n_test=133 the interval
+    # is wide, and any ablation difference smaller than it is not a finding.
+    for i, tgt in enumerate(("ssim", "psnr")):
+        lo, hi = bootstrap_r2_ci(y_true[:, i], y_pred[:, i], n_boot=CNN_N_BOOTSTRAP)
+        metrics[tgt]["r2_ci95"] = [round(lo, 4), round(hi, 4)]
     metrics["avg_R2_SSIM_PSNR_project_defined"] = combined_r2(
         metrics["ssim"]["r2"], metrics["psnr"]["r2"])
     with open(out_dir / "metrics.json", "w") as f:
         json.dump(metrics, f, indent=2)
     print(f"[{run_tag}] n_test={len(names)} "
-          f"SSIM R²={metrics['ssim']['r2']:.4f} RMSE={metrics['ssim']['rmse']:.4f} "
-          f"PSNR R²={metrics['psnr']['r2']:.4f} RMSE={metrics['psnr']['rmse']:.4f} "
+          f"SSIM R²={metrics['ssim']['r2']:.4f} "
+          f"CI95={metrics['ssim']['r2_ci95']} RMSE={metrics['ssim']['rmse']:.4f} | "
+          f"PSNR R²={metrics['psnr']['r2']:.4f} "
+          f"CI95={metrics['psnr']['r2_ci95']} RMSE={metrics['psnr']['rmse']:.4f} dB | "
           f"avgR²={metrics['avg_R2_SSIM_PSNR_project_defined']:.4f}")
     return metrics
 

@@ -1,0 +1,45 @@
+{
+  "run": "mlp_final",
+  "model": "mlp",
+  "n_features": 14,
+  "features": [
+    "red_ratio",
+    "dynamic_range",
+    "entropy",
+    "correlation",
+    "keypoint_density",
+    "homogeneity",
+    "mean_blue",
+    "mean_value",
+    "mean",
+    "dissimilarity",
+    "laplacian_variance",
+    "glcm_variance",
+    "mean_saturation",
+    "variance"
+  ],
+  "n_test": 133,
+  "ssim": {
+    "r2": 0.3254582550485676,
+    "rmse": 0.091167668139915,
+    "mae": 0.07023676669687257,
+    "pearson_r": 0.5836795037415432,
+    "n": 133,
+    "r2_ci95": [
+      0.087,
+      0.4939
+    ]
+  },
+  "psnr": {
+    "r2": 0.14066764536568666,
+    "rmse": 2.9165569491403565,
+    "mae": 2.2034513645602347,
+    "pearson_r": 0.4024178179329213,
+    "n": 133,
+    "r2_ci95": [
+      -0.0009,
+      0.2622
+    ]
+  },
+  "avg_R2_SSIM_PSNR_project_defined": 0.23306295020712714
+}

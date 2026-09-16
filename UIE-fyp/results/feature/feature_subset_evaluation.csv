@@ -1,5 +1,6 @@
 k,features,ssim_r2,ssim_rmse,ssim_mae,ssim_pearson_r,psnr_r2,psnr_rmse,psnr_mae,psnr_pearson_r,avg_R2_SSIM_PSNR_project_defined
-12,"edge_density,rms_contrast,mean_blue,contrast,mean_saturation,mean_value,homogeneity,mean_red,glcm_variance,dynamic_range,correlation,mean",0.485,0.0708,0.0517,0.6965,0.3422,2.2905,1.7314,0.5892,0.4136
-10,"edge_density,rms_contrast,mean_blue,contrast,mean_saturation,mean_value,homogeneity,mean_red,glcm_variance,dynamic_range",0.5108,0.069,0.0505,0.715,0.3595,2.26,1.7108,0.6033,0.4352
-8,"edge_density,rms_contrast,mean_blue,contrast,mean_saturation,mean_value,homogeneity,mean_red",0.5065,0.0693,0.05,0.712,0.3573,2.264,1.712,0.6002,0.4319
-6,"edge_density,rms_contrast,mean_blue,contrast,mean_saturation,mean_value",0.4558,0.0728,0.0525,0.6789,0.3661,2.2485,1.663,0.612,0.4109
+14,"red_ratio,dynamic_range,entropy,correlation,keypoint_density,homogeneity,mean_blue,mean_value,mean,dissimilarity,laplacian_variance,glcm_variance,mean_saturation,variance",0.5392,0.067,0.0492,0.7367,0.3674,2.2461,1.7095,0.6168,0.4533
+12,"red_ratio,dynamic_range,entropy,correlation,keypoint_density,homogeneity,mean_blue,mean_value,mean,dissimilarity,laplacian_variance,glcm_variance",0.522,0.0682,0.0503,0.7235,0.3576,2.2635,1.7262,0.6088,0.4398
+10,"red_ratio,dynamic_range,entropy,correlation,keypoint_density,homogeneity,mean_blue,mean_value,mean,dissimilarity",0.5175,0.0685,0.0504,0.7205,0.3585,2.2618,1.7283,0.6089,0.438
+8,"red_ratio,dynamic_range,entropy,correlation,keypoint_density,homogeneity,mean_blue,mean_value",0.5222,0.0682,0.0505,0.7231,0.3577,2.2632,1.7377,0.61,0.44
+6,"red_ratio,dynamic_range,entropy,correlation,keypoint_density,homogeneity",0.5052,0.0694,0.0517,0.7113,0.332,2.3082,1.7641,0.5948,0.4186

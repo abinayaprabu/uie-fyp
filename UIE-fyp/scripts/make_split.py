@@ -3,7 +3,9 @@
 
 - Uses the validated paired identities from dataset_validation_report.csv
   (falls back to raw-890 filenames if the report is missing).
-- 70% / 15% / 15% with RANDOM_STATE=42  ->  623 / 133 / 134 images.
+- 70% / 15% / 15% with RANDOM_STATE=42  ->  train 623 / val 134 / test 133.
+  (An earlier docstring listed these as "623 / 133 / 134", transposing val
+  and test; the counts here are verified against data_split.csv.)
 - Saved to results/feature/data_split.csv; EVERY later stage (ranking,
   correlation, subset evaluation, CNN, baselines) must read this file so the
   test identities stay identical and untouched until final evaluation.

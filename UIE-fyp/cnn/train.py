@@ -33,6 +33,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from cnn.dataset import UIEBQualityDataset, fit_scalers  # noqa: E402
 from cnn.model import FeatMLP, HybridCNN, ImageOnlyCNN, count_params  # noqa: E402
 from src.config import (  # noqa: E402
+    CNN_AUGMENT_FLIPS,
     CNN_BATCH_SIZE,
     CNN_LR,
     CNN_MAX_EPOCHS,
@@ -50,7 +51,8 @@ def set_seeds(seed: int = CNN_SEED) -> None:
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
-    torch.set_num_threads(max(1, torch.get_num_threads()))
+    # NOTE: an earlier version called torch.set_num_threads(max(1, torch.get_num_threads()))
+    # here, which is a no-op (it sets the thread count to itself). Removed.
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
 
@@ -94,9 +96,21 @@ def run_epoch(model, loader, criterion, optimizer=None) -> float:
     return total / n
 
 
-def train_model(model_name: str, features_which: str) -> Path:
+def train_model(model_name: str, features_which: str, seed: int = CNN_SEED,
+                augment: bool | None = None) -> Path:
+    """Train one model. ``seed`` varies initialisation AND batch order.
+
+    ``augment=None`` means "use CNN_AUGMENT_FLIPS from config". Augmentation is
+    applied to the train split only (enforced inside UIEBQualityDataset).
+
+    The default seed keeps the historic run tag (e.g. ``hybrid_final``) so that
+    run_baselines.py / run_ablation.py keep working unchanged; other seeds get
+    an explicit ``_s<seed>`` suffix so repeated runs never overwrite each other.
+    """
     t0 = time.time()
-    set_seeds()
+    if augment is None:
+        augment = CNN_AUGMENT_FLIPS
+    set_seeds(seed)
     feat_names = [] if model_name == "image_only" else resolve_features(features_which)
     n_features = len(feat_names) if feat_names else 1  # dummy width if unused
     feat_scaler, target_scaler = (
@@ -104,22 +118,25 @@ def train_model(model_name: str, features_which: str) -> Path:
         else fit_scalers([FEATURE_NAMES_25[0]])  # unused dummy; keeps API uniform
     )
     run_tag = f"{model_name}_{features_which if feat_names else 'nofeat'}"
+    if seed != CNN_SEED:
+        run_tag += f"_s{seed}"
     run_dir = CNN_RESULTS_DIR / run_tag
     run_dir.mkdir(parents=True, exist_ok=True)
     MODELS_DIR.mkdir(parents=True, exist_ok=True)
 
-    g = torch.Generator().manual_seed(CNN_SEED)
+    g = torch.Generator().manual_seed(seed)
     train_loader = DataLoader(
         UIEBQualityDataset("train", feat_names or [FEATURE_NAMES_25[0]],
-                           feat_scaler, target_scaler),
+                           feat_scaler, target_scaler, augment=augment, seed=seed),
         batch_size=CNN_BATCH_SIZE, shuffle=True, generator=g)
     val_loader = DataLoader(
         UIEBQualityDataset("val", feat_names or [FEATURE_NAMES_25[0]],
-                           feat_scaler, target_scaler),
+                           feat_scaler, target_scaler, augment=False),
         batch_size=CNN_BATCH_SIZE, shuffle=False)
 
     model = build_model(model_name, n_features)
-    print(f"Model {model_name} ({count_params(model):,} params) | features: "
+    print(f"Model {model_name} ({count_params(model):,} params) | seed {seed} | "
+          f"augment(flips)={augment} | features: "
           f"{feat_names if feat_names else 'none (image only)'}")
     criterion = torch.nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=CNN_LR,
@@ -147,7 +164,8 @@ def train_model(model_name: str, features_which: str) -> Path:
     assert best_state is not None
     ckpt = MODELS_DIR / f"best_{run_tag}.pt"
     torch.save({"model_name": model_name, "feature_names": feat_names,
-                "state_dict": best_state}, ckpt)
+                "state_dict": best_state, "seed": seed, "augment": bool(augment)},
+               ckpt)
     joblib.dump(feat_scaler, MODELS_DIR / f"feat_scaler_{run_tag}.joblib")
     joblib.dump(target_scaler, MODELS_DIR / f"target_scaler_{run_tag}.joblib")
     pd.DataFrame(history).to_csv(run_dir / "train_history.csv", index=False)
@@ -160,9 +178,14 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", required=True, choices=["hybrid", "image_only", "mlp"])
     ap.add_argument("--features", default="final", choices=["final", "all25"])
+    ap.add_argument("--seed", type=int, default=CNN_SEED,
+                    help="seed for init + batch order (default CNN_SEED=%d)" % CNN_SEED)
+    ap.add_argument("--no-augment", action="store_true",
+                    help="disable the train-only flip augmentation")
     args = ap.parse_args()
     CNN_RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-    train_model(args.model, args.features)
+    train_model(args.model, args.features, seed=args.seed,
+                augment=False if args.no_augment else None)
     return 0
 
 

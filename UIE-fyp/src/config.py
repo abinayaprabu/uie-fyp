@@ -33,7 +33,9 @@ RANDOM_STATE = 42
 
 # ----------------------------------------------------------------------------
 # Data split (by image identity; the SAME ids are used by every stage).
-# 70% train / 15% validation / 15% test  ->  623 / 133 / 134 images.
+# 70% train / 15% validation / 15% test  ->  train 623 / val 134 / test 133.
+# (Verified against results/feature/data_split.csv. An earlier comment listed
+#  these as "623 / 133 / 134", transposing val and test.)
 # ----------------------------------------------------------------------------
 TRAIN_FRAC = 0.70
 VAL_FRAC = 0.15
@@ -72,6 +74,29 @@ CNN_PATIENCE = 12           # early-stopping patience (epochs, on val loss)
 CNN_LR = 1e-3
 CNN_WEIGHT_DECAY = 1e-4
 CNN_SEED = 42
+# Extra seeds for repeated runs (H5: a single seed on a 133-image test split
+# cannot separate model differences from run-to-run noise). The first entry is
+# always CNN_SEED so single-seed runs stay comparable with earlier results.
+CNN_SEEDS = (42, 43, 44)
+CNN_N_BOOTSTRAP = 4000      # resamples for the test-R^2 percentile CI
+
+# ---------------------------------------------------------------------------
+# Augmentation (train split only). RESTRICTED to the Klein four-group
+# {identity, hflip, vflip, hflip+vflip} because these four transforms were
+# MEASURED to leave all 25 handcrafted features exactly invariant (max relative
+# deviation 2.2e-16) and leave SSIM/PSNR invariant, since the same rigid
+# transform applied to both images of a pair changes neither metric. So the
+# 4x expansion needs no relabelling and no feature recomputation.
+#
+# 90-degree rotations are EXCLUDED: they convert the GLCM's horizontal
+# adjacency (angles=[0]) into vertical adjacency, shifting the 8 GLCM features
+# by up to 3.8%. They only become safe if GLCM is averaged over 4 angles.
+# Photometric augmentation (brightness/contrast/colour/gamma jitter) is
+# EXCLUDED outright: it alters the preprocessed image without altering the
+# reference, so the SSIM/PSNR targets genuinely change and the labels become
+# wrong.
+# ---------------------------------------------------------------------------
+CNN_AUGMENT_FLIPS = True
 
 # The 25 handcrafted features in canonical order.
 FEATURE_NAMES_25 = [

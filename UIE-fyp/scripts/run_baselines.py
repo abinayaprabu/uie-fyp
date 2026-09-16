@@ -36,7 +36,9 @@ from src.config import (  # noqa: E402
     RF_N_ESTIMATORS,
     SPLIT_CSV,
 )
-from src.metrics import combined_r2, regression_metrics  # noqa: E402
+from src.metrics import (  # noqa: E402
+    bootstrap_r2_ci, combined_r2, regression_metrics,
+)
 
 QUALITY_CSV = FEATURE_RESULTS_DIR / "feature_quality_dataset.csv"
 NEURAL_RUNS = [("mlp", "final"), ("image_only", "nofeat"), ("hybrid", "final")]
@@ -50,27 +52,31 @@ def rf_baseline(feat_names: list[str]) -> dict:
           f"(train={len(train)}, test={len(test)})")
     row: dict = {"model": "baseline_rf", "features": ",".join(feat_names),
                  "n_test": len(test)}
-    for target in ("ssim", "psnr"):
-        m = RandomForestRegressor(n_estimators=RF_N_ESTIMATORS,
-                                  min_samples_leaf=RF_MIN_SAMPLES_LEAF,
-                                  random_state=RANDOM_STATE, n_jobs=-1)
-        m.fit(train[feat_names], train[target])
-        met = regression_metrics(test[target], m.predict(test[feat_names]))
-        for k in ("r2", "rmse", "mae", "pearson_r"):
-            row[f"{target}_{k}"] = round(met[k], 4)
-    row["avg_R2_SSIM_PSNR_project_defined"] = round(
-        combined_r2(row["ssim_r2"], row["psnr_r2"]), 4)
     test_out = COMPARISON_RESULTS_DIR / "rf_baseline_test_predictions.csv"
     COMPARISON_RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-    # Re-predict both targets for the predictions file.
     preds = {"image_name": test["image_name"].tolist(),
              "ssim_true": test["ssim"].tolist(), "psnr_true": test["psnr"].tolist()}
+    # L7 FIX: each forest is now fit ONCE per target and reused for both the
+    # metrics row and the predictions file. The previous version fit it twice;
+    # with a fixed random_state the two fits agreed, so this is purely a 2x
+    # saving, not a behaviour change.
     for target in ("ssim", "psnr"):
         m = RandomForestRegressor(n_estimators=RF_N_ESTIMATORS,
                                   min_samples_leaf=RF_MIN_SAMPLES_LEAF,
                                   random_state=RANDOM_STATE, n_jobs=-1)
         m.fit(train[feat_names], train[target])
-        preds[f"{target}_pred"] = m.predict(test[feat_names])
+        p = m.predict(test[feat_names])
+        preds[f"{target}_pred"] = p
+        met = regression_metrics(test[target], p)
+        for k in ("r2", "rmse", "mae", "pearson_r"):
+            row[f"{target}_{k}"] = round(met[k], 4)
+        # H5: a point R2 on 133 test images is not interpretable without an
+        # interval; report the percentile bootstrap CI alongside it.
+        lo, hi = bootstrap_r2_ci(test[target], p)
+        row[f"{target}_r2_ci95_lo"] = round(lo, 4)
+        row[f"{target}_r2_ci95_hi"] = round(hi, 4)
+    row["avg_R2_SSIM_PSNR_project_defined"] = round(
+        combined_r2(row["ssim_r2"], row["psnr_r2"]), 4)
     pd.DataFrame(preds).to_csv(test_out, index=False)
     print(f"  RF: SSIM R²={row['ssim_r2']:.4f} PSNR R²={row['psnr_r2']:.4f} "
           f"avg={row['avg_R2_SSIM_PSNR_project_defined']:.4f}")
