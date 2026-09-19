@@ -113,3 +113,41 @@ FEATURE_NAMES_25 = [
 ]
 
 TARGETS = ("ssim", "psnr")
+
+# ===========================================================================
+# ENHANCEMENT / RESTORATION U-NET  (image -> image)
+# ---------------------------------------------------------------------------
+# This is the component the project objective requires and that the quality
+# -prediction CNNs (above) do NOT provide: those regress an image to two
+# scalars [SSIM, PSNR], whereas this network maps a degraded image to an
+# enhanced IMAGE of the same dimensions.
+#
+# The values below are "Config A", FROZEN on 2026-09-16 from a measured
+# one-epoch benchmark (docs/enhancement-benchmark.md) and fixed BEFORE any
+# training run. They are not to be tuned against the test split:
+#   crop 128x128, batch 8, base channels 32 -> 472,259 trainable parameters,
+#   61.9 s/epoch on 2 CPU cores, 1,290 MB peak RSS, 78 iterations/epoch.
+# Nothing above this line is modified by the enhancement work.
+# ===========================================================================
+ENH_RUN_TAG = "unet_128"
+ENH_CROP_SIZE = 128            # random crop, train only (val/test are full-res)
+ENH_BATCH_SIZE = 8
+ENH_BASE_CHANNELS = 32         # 3-level U-Net: 32 -> 64 -> 128
+ENH_EXPECTED_PARAMS = 472_259  # asserted at build time; guards the frozen arch
+ENH_LR = 2e-4                  # Adam; standard for L1 image restoration
+ENH_WEIGHT_DECAY = 0.0
+ENH_MAX_EPOCHS = 100           # FIXED BEFORE TRAINING - not adjusted afterwards
+ENH_VAL_EVERY = 5              # full-resolution validation pass every N epochs
+ENH_PATIENCE = 4               # in VALIDATIONS (= 20 epochs), on val SSIM
+ENH_SEED = 42
+# Paired geometric augmentation (train split only): flips x rot90 = 8 transforms
+# applied IDENTICALLY to the input and the reference target, so the pair stays
+# consistent. Unlike the quality-prediction pipeline, 90-degree rotations ARE
+# safe here because no handcrafted/GLCM features are involved. Photometric
+# augmentation is EXCLUDED: jittering the input without the target would teach
+# the network a mapping that is wrong by construction.
+ENH_AUGMENT_GEOMETRIC = True
+ENH_LOSS = "l1"                # pixel-space reconstruction loss
+
+ENHANCED_DIR = DATASET_DIR / "enhanced-test"       # gitignored (derived images)
+ENHANCEMENT_RESULTS_DIR = RESULTS_DIR / "enhancement"

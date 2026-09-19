@@ -26,7 +26,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from cnn.dataset import UIEBQualityDataset  # noqa: E402
 from cnn.model import FeatMLP, HybridCNN, ImageOnlyCNN  # noqa: E402
 from src.config import (  # noqa: E402
-    CNN_BATCH_SIZE, CNN_N_BOOTSTRAP, CNN_RESULTS_DIR, MODELS_DIR,
+    CNN_BATCH_SIZE, CNN_MAX_EPOCHS, CNN_N_BOOTSTRAP, CNN_RESULTS_DIR, MODELS_DIR,
 )
 from src.metrics import (  # noqa: E402
     bootstrap_r2_ci, combined_r2, regression_metrics,
@@ -75,6 +75,22 @@ def evaluate_run(run_tag: str) -> dict:
         "ssim": regression_metrics(y_true[:, 0], y_pred[:, 0]),
         "psnr": regression_metrics(y_true[:, 1], y_pred[:, 1]),
     }
+    # Provenance required for independent audit: which seed produced this run,
+    # whether augmentation was on, and WHICH EPOCH the reported test numbers
+    # come from (must be the best-val checkpoint, not the last epoch). Purely
+    # additive — read back from the checkpoint and the training history that
+    # train.py already wrote; nothing about the model or evaluation changes.
+    metrics["seed"] = ckpt.get("seed")
+    metrics["augment_flips"] = ckpt.get("augment")
+    hist_path = out_dir / "train_history.csv"
+    if hist_path.exists():
+        hist = pd.read_csv(hist_path)
+        best_i = int(hist["val_loss"].to_numpy().argmin())
+        metrics["best_epoch"] = int(hist["epoch"].iloc[best_i])
+        metrics["best_val_loss"] = float(hist["val_loss"].iloc[best_i])
+        metrics["final_epoch_val_loss"] = float(hist["val_loss"].iloc[-1])
+        metrics["n_epochs_completed"] = int(len(hist))
+        metrics["early_stopped"] = bool(len(hist) < CNN_MAX_EPOCHS)
     # H5: report a bootstrap CI on each test R2. With n_test=133 the interval
     # is wide, and any ablation difference smaller than it is not a finding.
     for i, tgt in enumerate(("ssim", "psnr")):

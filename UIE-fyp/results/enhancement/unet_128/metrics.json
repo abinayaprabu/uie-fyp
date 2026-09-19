@@ -1,0 +1,113 @@
+{
+  "run": "unet_128",
+  "split": "test",
+  "n_test": 133,
+  "metric_definition_matches_committed_labels": true,
+  "max_deviation_vs_committed": {
+    "ssim": 1.1102230246251565e-16,
+    "psnr": 3.552713678800501e-15
+  },
+  "raw": {
+    "ssim": {
+      "mean": 0.760276,
+      "median": 0.781429,
+      "std": 0.138245,
+      "min": 0.332946,
+      "max": 0.991196,
+      "n": 133,
+      "mean_ci95": [
+        0.736401,
+        0.78328
+      ]
+    },
+    "psnr": {
+      "mean": 17.063267,
+      "median": 16.427368,
+      "std": 4.049612,
+      "min": 10.023873,
+      "max": 29.637809,
+      "n": 133,
+      "mean_ci95": [
+        16.387029,
+        17.749683
+      ]
+    }
+  },
+  "classical": {
+    "ssim": {
+      "mean": 0.763648,
+      "median": 0.787991,
+      "std": 0.111423,
+      "min": 0.410694,
+      "max": 0.93228,
+      "n": 133,
+      "mean_ci95": [
+        0.743331,
+        0.781801
+      ]
+    },
+    "psnr": {
+      "mean": 17.088898,
+      "median": 16.78831,
+      "std": 3.158121,
+      "min": 10.980936,
+      "max": 28.817578,
+      "n": 133,
+      "mean_ci95": [
+        16.536966,
+        17.623271
+      ]
+    }
+  },
+  "unet": {
+    "ssim": {
+      "mean": 0.800296,
+      "median": 0.816252,
+      "std": 0.079218,
+      "min": 0.569255,
+      "max": 0.91745,
+      "n": 133,
+      "mean_ci95": [
+        0.786203,
+        0.813231
+      ]
+    },
+    "psnr": {
+      "mean": 19.324221,
+      "median": 19.295809,
+      "std": 2.531639,
+      "min": 12.218697,
+      "max": 25.412714,
+      "n": 133,
+      "mean_ci95": [
+        18.899347,
+        19.744202
+      ]
+    }
+  },
+  "unet_minus_classical": {
+    "ssim_mean_delta": 0.036648,
+    "ssim_median_delta": 0.032125,
+    "ssim_delta_std": 0.049138,
+    "ssim_win": 102,
+    "ssim_loss": 31,
+    "ssim_tie": 0,
+    "ssim_wilcoxon_p": 0.0,
+    "ssim_delta_ci95": [
+      0.028532,
+      0.045499
+    ],
+    "psnr_mean_delta_db": 2.2353,
+    "psnr_median_delta_db": 2.1814,
+    "psnr_delta_std_db": 2.0692,
+    "psnr_win": 121,
+    "psnr_loss": 12,
+    "psnr_tie": 0,
+    "psnr_wilcoxon_p": 0.0,
+    "psnr_delta_ci95": [
+      1.8781,
+      2.5879
+    ]
+  },
+  "elapsed_seconds": 31.2
+}

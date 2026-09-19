@@ -82,3 +82,36 @@ def paired_wilcoxon(err_a, err_b) -> float:
         return float(wilcoxon(d, zero_method="wilcox").pvalue)
     except ValueError:
         return 1.0
+
+
+def bootstrap_mean_ci(values, n_boot: int = 4000, seed: int = 0,
+                      alpha: float = 0.05) -> tuple[float, float]:
+    """Percentile bootstrap CI for a MEAN (single sample of per-image values).
+
+    Added for the enhancement experiment, where the reported quantity is the
+    mean SSIM / mean PSNR over the 133 sealed test images rather than an R².
+    """
+    v = np.asarray(values, dtype=float)
+    n = len(v)
+    if n < 3:
+        return (float("nan"), float("nan"))
+    rng = np.random.default_rng(seed)
+    vals = np.empty(n_boot)
+    for b in range(n_boot):
+        vals[b] = v[rng.integers(0, n, n)].mean()
+    lo, hi = np.percentile(vals, [100 * alpha / 2, 100 * (1 - alpha / 2)])
+    return (float(lo), float(hi))
+
+
+def bootstrap_mean_delta_ci(delta, n_boot: int = 4000, seed: int = 0,
+                            alpha: float = 0.05) -> tuple[float, float]:
+    """Percentile bootstrap CI for the MEAN PAIRED DIFFERENCE between two models
+    evaluated on the SAME images.
+
+    This is the interval that decides whether an improvement is a finding: if it
+    excludes zero, the gain survives resampling of the test set; if it contains
+    zero, the gain is not distinguishable from which 133 images happened to be
+    held out. Paired by construction (one difference per image), so it is far
+    tighter than comparing two independent CIs.
+    """
+    return bootstrap_mean_ci(delta, n_boot=n_boot, seed=seed, alpha=alpha)

@@ -611,6 +611,25 @@ but no "proposed model". That is priority 1 and it is purely compute time.
 
 ## 5. Do this, in this order
 
+> ### ⚠ "Don't redo preprocessing" — what that does and does not mean
+>
+> The correct instruction is: **do not *change* Phases 1–5.** The 14 features,
+> the split, the preprocessing parameters and the targets are frozen.
+>
+> But `dataset/raw-890/`, `dataset/reference-890/` and `dataset/preprocessed/`
+> are **gitignored** (~2 GB of images), so they do not survive a fresh clone or
+> an environment reset. After any reset you **must** re-run
+> `download_uieb.py` → `run_preprocessing.py` → `build_feature_dataset.py`,
+> because the CNN literally cannot train without `dataset/preprocessed/`.
+>
+> **Re-running is not redoing, as long as the output is identical — and you
+> verify that it is.** This was done on 2026-09-16: both regenerated files came
+> back bit-identical to the committed copies (md5 unchanged), which *proves*
+> nothing downstream was disturbed and that Phases 4–5 remain valid. That check
+> is the whole point of Step 1. If the md5 had differed, every number in the
+> thesis would have had to change — which is why you check *before* spending
+> hours on CNN training, never after.
+
 **Step 1 — Regenerate the intermediates** ✓ **DONE 2026-09-16, gate passed.**
 (~10 min CPU; must be repeated after every fresh environment because `dataset/`
 is gitignored.) Both outputs came back **bit-identical** to the committed copies
@@ -692,6 +711,31 @@ this from "competent" to "impressive"; U7–U8 are polish.
 
 Both must be settled **before** the CNN runs, because both change the features,
 and changing features invalidates every trained model.
+
+> ### ✅ DECIDED 2026-09-16 — the feature set is FROZEN
+>
+> **H4 = keep `angles=[0]`. M6 = keep Pearson |r| ≥ 0.90 as the sole filter.**
+> The 14 features are final and will not change. This is the right call at this
+> stage: the project is at its last coding step, and freezing removes the risk of
+> invalidating trained models or having to re-derive every number in the thesis.
+>
+> **What is being given up, stated honestly so it can go in the thesis:**
+> * GLCM at a single angle is orientation-sensitive and is *not* Haralick's
+>   original definition (which averaged over 0°/45°/90°/135°). → Limitations item.
+> * Because of that, rot90 augmentation stays **excluded** and the CNN gets a 4×
+>   (flip-only) expansion rather than 8× on just 623 training images. → Recorded
+>   as a small-data limitation, and the most obvious piece of future work.
+> * Pearson misses monotone-but-nonlinear redundancy (e.g. `variance` = `std`²),
+>   so `variance` survives into the 14 even though `std` was removed.
+>
+> **The cheap way to recover most of the credit without touching the frozen set:**
+> run the Spearman filter **as a reported sensitivity check only** (U10) — it
+> costs ~30 min, changes no model, and if the survivor set and performance are
+> near-identical you can write *"the selection is robust to the choice of
+> correlation measure"*. Same for GLCM: report the 4-angle variant as future
+> work rather than re-running it.
+
+The analysis behind each decision is kept below.
 
 ### H4 — GLCM: one angle or four?
 
