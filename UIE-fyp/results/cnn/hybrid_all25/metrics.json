@@ -1,0 +1,63 @@
+{
+  "run": "hybrid_all25",
+  "model": "hybrid",
+  "n_features": 25,
+  "features": [
+    "mean",
+    "std",
+    "variance",
+    "entropy",
+    "dynamic_range",
+    "rms_contrast",
+    "mean_red",
+    "mean_green",
+    "mean_blue",
+    "colorfulness",
+    "red_ratio",
+    "mean_saturation",
+    "mean_value",
+    "contrast",
+    "correlation",
+    "energy",
+    "homogeneity",
+    "ASM",
+    "dissimilarity",
+    "glcm_entropy",
+    "glcm_variance",
+    "edge_density",
+    "gradient",
+    "laplacian_variance",
+    "keypoint_density"
+  ],
+  "n_test": 133,
+  "ssim": {
+    "r2": 0.40028361279435865,
+    "rmse": 0.08596256957212348,
+    "mae": 0.06711339614445105,
+    "pearson_r": 0.6527803288198453,
+    "n": 133,
+    "r2_ci95": [
+      0.1732,
+      0.5596
+    ]
+  },
+  "psnr": {
+    "r2": 0.18357788217028614,
+    "rmse": 2.8428062395517033,
+    "mae": 2.1568092116735933,
+    "pearson_r": 0.44454738581064135,
+    "n": 133,
+    "r2_ci95": [
+      0.0264,
+      0.3085
+    ]
+  },
+  "seed": 42,
+  "augment_flips": true,
+  "best_epoch": 9,
+  "best_val_loss": 0.5181298867535236,
+  "final_epoch_val_loss": 0.5790764818440622,
+  "n_epochs_completed": 21,
+  "early_stopped": true,
+  "avg_R2_SSIM_PSNR_project_defined": 0.2919307474823224
+}

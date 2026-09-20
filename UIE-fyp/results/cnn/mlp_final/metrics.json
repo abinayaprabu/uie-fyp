@@ -41,5 +41,12 @@
       0.2622
     ]
   },
+  "seed": 42,
+  "augment_flips": true,
+  "best_epoch": 22,
+  "best_val_loss": 0.5563215744584354,
+  "final_epoch_val_loss": 0.5855055039943154,
+  "n_epochs_completed": 34,
+  "early_stopped": true,
   "avg_R2_SSIM_PSNR_project_defined": 0.23306295020712714
 }

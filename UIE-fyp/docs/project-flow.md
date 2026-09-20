@@ -592,20 +592,55 @@ The three interpretive claims you can defend with evidence already in the repo:
 
 | phase | status |
 |---|---|
-| 0 Environment | ✓ **rebuilt & verified 2026-09-16** (torch 2.14.0+cu130, cv2 5.0.0, sklearn 1.9.1, numpy 2.4.6, pandas 3.0.5, skimage 0.26.0) |
-| 1 Data | ✓ **re-downloaded & verified 2026-09-16** — 890 raw / 890 reference / 60 challenging, filename correspondence OK; all critical dataset checks PASS; phash pairing control PASS (paired median 2.0 vs cross-pair 32.0). Images are gitignored, so a fresh clone must re-run `download_uieb.py`. |
+| 0 Environment | ✓ **rebuilt & verified 2026-09-19** (torch 2.14.0+cu130, cv2 5.0.0, sklearn 1.9.1). Rebuilt twice — the sandbox was reset on 2026-09-16 and again before 2026-09-19, and `.venv` is not persisted. |
+| 1 Data | ✓ **re-downloaded & verified 2026-09-19** — 890 raw / 890 reference / 60 challenging, filename correspondence OK; all critical dataset checks PASS; phash pairing control PASS (paired median 2.0 vs cross-pair 32.0). Images are gitignored, so a fresh clone must re-run `download_uieb.py`. |
 | 2 Split | ✓ **done** — 623/134/133 committed and verified |
-| 3a Classical enhancement | ✓ **re-run & bit-identical 2026-09-16** — `dataset/preprocessed/` (890 images, 351 MB) regenerated; `preprocessing_log.csv` md5 unchanged |
-| 3b Learned enhancer | ✗ **does not exist** (upgrade U3) |
-| 4 Targets + 25 features | ✓ **re-run & bit-identical 2026-09-16** — checks 3–10 PASS, `feature_quality_dataset.csv` md5 unchanged (27×890) |
+| 3a Classical enhancement | ✓ **re-run & bit-identical 2026-09-19** — `dataset/preprocessed/` (890 images) regenerated; `preprocessing_log.csv` md5 unchanged (`b104dd20…`) |
+| 3b Learned enhancer | ✓ **DONE (Config A U-Net, `unet_128`)** — 472,259 params, trained 153.6 min, best epoch 55/75, independently verified **53/53 PASS**. Test SSIM **0.8003** vs classical **0.7636** (+0.0366, CI95 [+0.0285,+0.0455]); PSNR **19.324 dB** vs **17.089 dB** (+2.235 dB, CI95 [+1.878,+2.588]). Both CIs exclude zero. See §3 Phase 3b and `results/enhancement/unet_128/`. |
+| 4 Targets + 25 features | ✓ **re-run & bit-identical 2026-09-19** — checks 3–10 PASS, `feature_quality_dataset.csv` md5 unchanged (`e90a073f…`, 27×890) |
 | 5 Selection | ✓ **done** — corrected labels, 14 features, assertion added; **still valid**, because Phase 4 reproduced exactly |
-| 6 Models | ◐ RF ✓, MLP ✓ (both committed with CIs); **image-only CNN ✗, hybrid ✗, ablation C ✗** |
-| 7 Evaluation | ◐ RF + MLP test numbers ✓; CNN test numbers **PENDING**; most plots **PENDING** |
+| 6 Models | ✓ **ALL DONE 2026-09-19** — RF ✓, MLP ✓ (retrained and reproduced **bit-for-bit**), image-only CNN ✓, hybrid ✓, ablation C ✓. Every neural run independently verified **35/35 PASS**. |
+| 7 Evaluation | ✓ **all test numbers in** (sealed n=133, read once each); CIs + ablation table committed. Plots **PENDING**. |
 | 8 Write-up | ◐ README + 4 docs ✓; thesis not started |
 
-**The one blocking fact:** the proposed model has no results. Until B3/B4 and
-ablation C are run, the project has a feature-selection study and two baselines,
-but no "proposed model". That is priority 1 and it is purely compute time.
+**The blocking fact is now resolved.** All four models have sealed-test numbers
+and the ablation is complete, so the project has a *proposed model* (D) with a
+measured advantage over every baseline. The C-vs-D verdict — the empirical
+justification for the whole feature-selection pipeline — is recorded in §5
+Step 3 and `results/comparison/ablation_results.csv`.
+
+### Final sealed-test results (n = 133, each split read exactly once)
+
+| run | model | inputs | SSIM R² | PSNR R² | **avg R²** | best epoch | epochs |
+|---|---|---|---|---|---|---|---|
+| `baseline_rf` | RandomForest | 14 features | 0.3576 | 0.2249 | 0.2913 | — | — |
+| `mlp_final` | MLP | 14 features | 0.3255 | 0.1407 | 0.2331 | 22 | 34 |
+| `image_only_nofeat` (A) | CNN | image only | 0.4659 | 0.1996 | 0.3327 | 16 | 28 |
+| `hybrid_all25` (C) | HybridCNN | image + 25 features | 0.4003 | 0.1836 | 0.2919 | 9 | 21 |
+| **`hybrid_final` (D)** | **HybridCNN** | **image + 14 features** | **0.4658** | **0.2211** | **0.3435** | **19** | **31** |
+
+Ordering: **D (0.3435) > A (0.3327) > C (0.2919) > B/RF (0.2913) > MLP (0.2331).**
+
+Two findings worth stating plainly in the thesis:
+
+1. **Feature selection pays for itself.** D beats C by **+0.0516 avg R²** using
+   *fewer* inputs (14 vs 25). Feeding the CNN all 25 handcrafted features makes
+   it **worse** than feeding it pixels alone (C 0.2919 < A 0.3327) — the
+   unselected features add noise the network then has to fight. This is the
+   strongest available evidence that the RF-permutation ranking plus Pearson
+   redundancy filter is doing real work, not just ceremony.
+2. **The CNN does most of the heavy lifting, the features finish the job.**
+   Going from pixels-only (A) to pixels+14 features (D) adds only **+0.0108
+   avg R²**, and that gain is *entirely* in PSNR (+0.0215); SSIM R² is
+   unchanged to 4 dp (0.4659 → 0.4658). So the selected features carry
+   information about *pixel-level fidelity* that the CNN misses, and essentially
+   nothing about *structural similarity* that it does not already extract.
+
+Honest caveat, per the standing reporting rule: the D-over-A margin (+0.0108)
+is small relative to the bootstrap CI widths (±~0.15), so **D is not
+statistically distinguishable from A on 133 test images.** The C-vs-D margin
+(+0.0516) is more meaningful but should still be reported with its CIs, not as a
+claim of significance. Do not re-tune on test to widen it.
 
 ---
 
@@ -653,26 +688,66 @@ change — so check this before spending ten hours on CNN training.
 features after the CNN has trained means throwing the CNN runs away. This is the
 last cheap moment to decide.
 
-**Step 3 — Run the CNN suite** (the long job; on this 2-core/3 GB box expect
-roughly 1–2 h per neural run at 224×224):
+**Step 3 — Run the CNN suite** ✓ **DONE 2026-09-19, all gates passed.**
+Actual wall-clock on this 2-core/3.9 GB box was much better than the 1–2 h
+estimate, because `torch.get_num_threads()` is 1 and the models are small:
+
+| run | command | train time | epochs | verification |
+|---|---|---|---|---|
+| `image_only_nofeat` | `python -m cnn.train --model image_only` | 2339 s (39.0 min) | 28 (best 16) | **35/35 PASS** |
+| `hybrid_final` | `python -m cnn.train --model hybrid` | 2206 s (36.8 min) | 31 (best 19) | **35/35 PASS** |
+| `hybrid_all25` | `python -m cnn.train --model hybrid --features all25` | 1515 s (25.3 min) | 21 (best 9) | **35/35 PASS** |
+| `mlp_final` (re-run) | `python -m cnn.train --model mlp` | 219 s | 34 (best 22) | **31/31 PASS** |
+
+Each was followed by `python -m cnn.evaluate --run <tag>` and
+`python scripts/verify_results.py --run <tag> --expect-features <0|14|25>`,
+**one experiment at a time with the verification gate between them** — the
+chain was wired to halt rather than continue if any gate failed. Then:
 
 ```bash
-python scripts/run_baselines.py     # B3 image_only, B4 hybrid (+ re-reports B1/B2)
-python scripts/run_ablation.py      # C hybrid_all25, reuses A/B/D
-python scripts/make_plots.py
+python scripts/run_baselines.py --skip-train   # re-reports B1/B2 + baseline_metrics.csv
+python scripts/run_ablation.py  --skip-train   # A/B/C/D  -> ablation_results.csv
+python scripts/make_plots.py                   # STILL PENDING
 ```
 
-Do this **single-seed first** to get numbers on the board, then repeat with
-`CNN_SEEDS=(42,43,44)` if time allows. Getting one complete set of results is
-worth more than three seeds of a half-finished experiment.
+**C-vs-D verdict: D wins, 0.3435 vs 0.2919 avg R² (+0.0516) with fewer inputs.**
+Full table and interpretation in §4. Note that `run_baselines.py` refits the RF
+and its `rf_baseline_test_predictions.csv` came back numerically identical to
+the committed copy (max |Δ| 7.1e-15, R² identical to 6 dp) — only the float
+*formatting* differed, so the committed file was kept.
 
-**Step 4 — Commit immediately** after each run. Long jobs are the most
-expensive thing to lose.
+**Reproducibility result worth citing.** After the second sandbox reset wiped
+`.venv`, the 1.6 GB dataset and every checkpoint, `mlp_final` was retrained from
+scratch and reproduced **bit-for-bit**: `train_history.csv` and
+`test_predictions.csv` are byte-identical to commit `15e3d6c`, and SSIM R²
+`0.3254582550485676` / PSNR R² `0.14066764536568666` match to full float
+precision. The only change to `metrics.json` was *additive* audit metadata
+(`seed`, `best_epoch`, `best_val_loss`, `n_epochs_completed`, `early_stopped`).
+This is the evidence that the frozen pipeline is genuinely deterministic —
+seeds fixed, `cudnn.deterministic`, a seeded `torch.Generator` for shuffle
+order, single-threaded torch, and scalers/target-transform fitted on train only.
+
+**Step 4 — Commit immediately** after each run ✓ done (`f9a7832`, `97fac81`,
+and the ablation commit). Long jobs are the most expensive thing to lose.
+
+> ⚠ **Outstanding: these commits are local-only.** `GH_TOKEN` expired, so
+> `git push` fails with *"could not read Username for 'https://github.com'"*.
+> The last state confirmed on GitHub is `f0d2f48`. Reconnect GitHub, then
+> `git push origin arena/01a0a56a-uie-fyp`. Two lessons recorded here because
+> they nearly caused a false all-clear: (1) never read `$?` after piping git to
+> `tail`/`head` — that reports the *pipe's* exit code, and a failed push looks
+> like success; (2) confirm a push with `git ls-remote origin` and by checking
+> that the `origin/<branch>` tracking ref actually moved, not by trusting the
+> command's apparent exit status.
 
 **Step 5 — Fill README §12–§14** with the CNN test numbers and record the
-C-vs-D verdict.
+C-vs-D verdict. **PENDING** — the numbers are final and in §4 above.
 
 **Step 6 — Then, and only then, the upgrades in §6** in priority order.
+Remaining compute items: `make_plots.py`, the U-Net retrain (its checkpoint
+`models/best_unet_128.pt` is gitignored and was wiped — ~153 min to regenerate,
+though every number it produced is committed and verified), and multi-seed
+repeats (`CNN_SEEDS=(42,43,44)`) if time allows.
 
 ---
 
