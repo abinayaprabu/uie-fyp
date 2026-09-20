@@ -461,7 +461,7 @@ Three rules the code actually enforces (not just documents):
 | ablations A/B/C/D | `ablation_results.csv` |
 | U-Net result + paired tests | `results/enhancement/unet_128/{metrics.json,test_per_image.csv}` |
 | U-Net used the frozen config, test unseen | checkpoint config + id fingerprints, checked by `verify_enhancement.py` |
-| figures | `plots/` (13 PNGs) |
+| figures | `plots/` (14 PNGs, including `enhancement_samples.png` added after this audit was written) |
 
 ---
 
