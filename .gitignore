@@ -1,0 +1,42 @@
+# ---- UIEB image data (~1.6 GB, reproducible via scripts/download_uieb.py) ----
+# NOTE: UIE-fyp/dataset/mirror_file_listing.json IS tracked (provenance record
+# of the mirror's filenames). Only the heavy image subdirectories are ignored.
+#
+# The `**/` prefix is REQUIRED here: the project lives in the UIE-fyp/
+# subdirectory of this repository, and a pattern containing an internal slash
+# (e.g. `dataset/raw-890/`) is anchored to the directory holding this file, so
+# without `**/` it would match only <root>/dataset/raw-890/ and silently let
+# 1.6 GB of images through as untracked.
+**/dataset/raw-890/
+**/dataset/reference-890/
+**/dataset/preprocessed/
+**/dataset/challenging-60/
+**/dataset/_tmp_uieb/
+# U-Net enhanced outputs for the sealed test split (~40 MB): TRACKED since
+# 2026-09-20. Unlike preprocessed/ (46 s to regenerate), these cost ~153 min
+# of CPU per regeneration and were twice destroyed by sandbox resets while
+# untracked, so they earn permanent storage in git. Regeneration command:
+# `python -m cnn.enhance --split test`. Sample side-by-side figures are
+# tracked under plots/.
+# (pattern intentionally removed: **/dataset/enhanced-test/)
+_uieb_mirror.tar.gz
+*.tar.gz
+
+# ---- trained model artifacts (large binaries; checkpoints are not source) ----
+**/models/
+*.pt
+*.pth
+*.joblib
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ipynb_checkpoints/
+
+# ---- local virtualenvs / editor / OS ----
+.venv/
+venv/
+.idea/
+.vscode/
+.DS_Store

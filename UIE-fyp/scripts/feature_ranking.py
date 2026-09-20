@@ -90,21 +90,79 @@ def main() -> int:
     r_ssim.to_csv(FEATURE_RESULTS_DIR / "ranking_ssim.csv", index=False)
     r_psnr.to_csv(FEATURE_RESULTS_DIR / "ranking_psnr.csv", index=False)
 
+    # ------------------------------------------------------------------
+    # Negative importances are possible and meaningful: a negative value
+    # means shuffling that column IMPROVED held-out performance, i.e. the
+    # feature is actively harmful for that target. The min-max step below
+    # therefore maps the most-harmful feature to 0.000 and the most useful
+    # to 1.000. A normalised 0.000 must be read as "most harmful", NOT as
+    # "neutral / unimportant". Reported here so the tables are not misread.
+    # ------------------------------------------------------------------
+    for tag, r in (("ssim", r_ssim), ("psnr", r_psnr)):
+        neg = r[r["importance_mean"] < 0]
+        print(f"[{tag}] raw permutation importance: min={r['importance_mean'].min():.4g} "
+              f"max={r['importance_mean'].max():.4g} | {len(neg)}/25 negative "
+              f"(shuffling them IMPROVED val error -> normalises to ~0.000)")
+        if len(neg):
+            print(f"        most harmful: "
+                  f"{', '.join(neg['feature'].tail(3).tolist()[::-1])}")
+
     def minmax(s: pd.Series) -> pd.Series:
         lo, hi = s.min(), s.max()
         return (s - lo) / (hi - lo) if hi > lo else s * 0.0
 
-    combined = pd.DataFrame({
-        "feature": FEATURE_NAMES_25,
+    # ------------------------------------------------------------------
+    # BUG FIX (C1). The previous construction was:
+    #     pd.DataFrame({"feature": FEATURE_NAMES_25,
+    #                   "importance_ssim": <Series indexed by feature>,
+    #                   "importance_psnr": <Series indexed by feature>})
+    # The two Series carry DIFFERENT index orders (each sorted by its own
+    # target's importance), so pandas indexes the frame by the SORTED UNION
+    # of those indices. The Series columns align BY INDEX (correct), but the
+    # plain list "feature" is assigned POSITIONALLY (wrong). Every label was
+    # therefore shifted: row i got FEATURE_NAMES_25[i] while holding the
+    # importances of sorted(FEATURE_NAMES_25)[i]. That is why the committed
+    # ranking_combined.csv claimed edge_density = 1.000/1.000 when both
+    # per-target files ranked red_ratio first.
+    #
+    # Build the frame from the two Series ALONE so everything aligns by
+    # index, then promote the index to the feature column.
+    # ------------------------------------------------------------------
+    imp = pd.DataFrame({
         "importance_ssim": minmax(r_ssim.set_index("feature")["importance_mean"]),
         "importance_psnr": minmax(r_psnr.set_index("feature")["importance_mean"]),
     })
+    imp.index.name = "feature"
+    combined = imp.reset_index()
+    assert sorted(combined["feature"]) == sorted(FEATURE_NAMES_25), \
+        "combined frame does not cover exactly the 25 canonical features"
     combined["importance_combined"] = (
         combined["importance_ssim"] + combined["importance_psnr"]) / 2.0
     combined = combined.sort_values("importance_combined", ascending=False
                                     ).reset_index(drop=True)
     combined.insert(0, "rank", combined.index + 1)
+
+    # ------------------------------------------------------------------
+    # C1 GUARD. All three ranking files are written by this one script from
+    # the same in-memory arrays, so min-max normalisation guarantees that
+    # the feature holding importance_<target> == 1.0 in ranking_combined.csv
+    # IS the rank-1 feature of ranking_<target>.csv. Stale per-target files
+    # left over from an earlier run break that invariant silently and make
+    # the committed evidence self-contradictory. Assert it.
+    # ------------------------------------------------------------------
+    for tag, r, col in (("ssim", r_ssim, "importance_ssim"),
+                        ("psnr", r_psnr, "importance_psnr")):
+        top_norm = combined.loc[combined[col].idxmax(), "feature"]
+        top_raw = r.iloc[0]["feature"]
+        assert top_norm == top_raw, (
+            f"INCONSISTENT RANKING ARTIFACTS ({tag}): ranking_combined top "
+            f"'{top_norm}' != ranking_{tag} top '{top_raw}'. The per-target "
+            f"file is stale - re-run scripts/feature_ranking.py so all three "
+            f"outputs come from one run.")
+    print("\nRanking artifact consistency (ranking_{ssim,psnr} vs ranking_combined): PASS")
+
     combined.to_csv(FEATURE_RESULTS_DIR / "ranking_combined.csv", index=False)
+
 
     print(f"\nAverage held-out (val) R² across SSIM and PSNR (project-defined): "
           f"{combined_r2(m_ssim['r2'], m_psnr['r2']):.4f}")

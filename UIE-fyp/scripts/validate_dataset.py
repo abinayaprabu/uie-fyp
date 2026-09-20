@@ -225,6 +225,16 @@ def main() -> int:
                 cross.append(hamming(phash(a), phash(b)))
             print(f"  cross-pair baseline (mismatched pairs): median={np.median(cross):.0f} "
                   f"mean={np.mean(cross):.1f}")
+            # M4 FIX: the README cites "median 2 vs 32 for mismatched pairs", but
+            # this control distribution was only ever printed, never persisted, so
+            # the claim was unverifiable from the committed artifacts. Store it.
+            pd.DataFrame({
+                "statistic": ["paired_median", "paired_mean", "paired_max",
+                              "crosspair_median", "crosspair_mean", "n_crosspair_sampled"],
+                "value": [float(np.median(arr)), float(arr.mean()), int(arr.max()),
+                          float(np.median(cross)), float(np.mean(cross)), len(cross)],
+            }).to_csv(FEATURE_RESULTS_DIR / "phash_pairing_control.csv", index=False)
+            print(f"  Saved {FEATURE_RESULTS_DIR / 'phash_pairing_control.csv'}")
             if np.median(arr) >= np.median(cross):
                 failures.append("paired phash distance NOT smaller than cross-pair baseline; "
                                 "pairing may be wrong")

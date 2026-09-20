@@ -2,7 +2,10 @@
 """Ablation study — does feature ranking actually help the CNN?
 
   A: CNN image only                  (reuses image_only_nofeat test metrics)
-  B: 8 handcrafted features only     (reuses baseline_rf test metrics)
+  B: handcrafted features only, RF   (reuses baseline_rf test metrics;
+                                      uses the FINAL SELECTED set, whose size
+                                      is whatever subset evaluation chose -
+                                      an earlier docstring said "8 features")
   C: CNN + ALL 25 features           (trains hybrid_all25 once, evaluates test)
   D: CNN + selected final features   (reuses hybrid_final test metrics)
 

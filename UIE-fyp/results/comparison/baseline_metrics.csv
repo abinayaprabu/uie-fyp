@@ -1,0 +1,5 @@
+model,features,n_test,ssim_r2,ssim_rmse,ssim_mae,ssim_pearson_r,ssim_r2_ci95_lo,ssim_r2_ci95_hi,psnr_r2,psnr_rmse,psnr_mae,psnr_pearson_r,psnr_r2_ci95_lo,psnr_r2_ci95_hi,avg_R2_SSIM_PSNR_project_defined
+baseline_rf,"red_ratio,dynamic_range,entropy,correlation,keypoint_density,homogeneity,mean_blue,mean_value,mean,dissimilarity,laplacian_variance,glcm_variance,mean_saturation,variance",133,0.3576,0.089,0.0697,0.6065,0.1677,0.5039,0.2249,2.7699,2.0895,0.4753,0.0892,0.342,0.2913
+mlp_final,"red_ratio,dynamic_range,entropy,correlation,keypoint_density,homogeneity,mean_blue,mean_value,mean,dissimilarity,laplacian_variance,glcm_variance,mean_saturation,variance",133,0.3255,0.0912,0.0702,0.5837,,,0.1407,2.9166,2.2035,0.4024,,,0.2331
+image_only_nofeat,,133,0.4659,0.0811,0.0638,0.6948,,,0.1996,2.8148,2.1653,0.4598,,,0.3327
+hybrid_final,"red_ratio,dynamic_range,entropy,correlation,keypoint_density,homogeneity,mean_blue,mean_value,mean,dissimilarity,laplacian_variance,glcm_variance,mean_saturation,variance",133,0.4658,0.0811,0.066,0.6885,,,0.2211,2.7767,2.037,0.4891,,,0.3435

@@ -1,0 +1,37 @@
+{
+  "run": "image_only_nofeat",
+  "model": "image_only",
+  "n_features": 0,
+  "features": [],
+  "n_test": 133,
+  "ssim": {
+    "r2": 0.4658597713176643,
+    "rmse": 0.08112674937592976,
+    "mae": 0.06377108764827699,
+    "pearson_r": 0.6947920482867209,
+    "n": 133,
+    "r2_ci95": [
+      0.2624,
+      0.6093
+    ]
+  },
+  "psnr": {
+    "r2": 0.1995899621724352,
+    "rmse": 2.8147909259600867,
+    "mae": 2.1653248851460623,
+    "pearson_r": 0.45983065584414146,
+    "n": 133,
+    "r2_ci95": [
+      0.0455,
+      0.3273
+    ]
+  },
+  "seed": 42,
+  "augment_flips": true,
+  "best_epoch": 16,
+  "best_val_loss": 0.4996038933298481,
+  "final_epoch_val_loss": 0.7491869454953208,
+  "n_epochs_completed": 28,
+  "early_stopped": true,
+  "avg_R2_SSIM_PSNR_project_defined": 0.33272486674504975
+}

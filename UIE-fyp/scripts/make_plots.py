@@ -93,11 +93,43 @@ def model_comparison() -> None:
     print(f"Saved {out}")
 
 
+def ablation_chart() -> None:
+    """Bar chart of the A/B/C/D feature-selection ablation (section 5 Step 3).
+
+    This is the figure that justifies the whole feature-selection pipeline:
+    D (CNN + 14 selected features) must be shown next to C (CNN + all 25) so
+    the cost of NOT selecting is visible. Purely a rendering of the already
+    committed results/comparison/ablation_results.csv -- no new numbers.
+    """
+    path = COMPARISON_RESULTS_DIR / "ablation_results.csv"
+    if not path.exists():
+        print(f"skip ablation chart: {path} missing"); return
+    df = pd.read_csv(path)
+    labels = [m.replace("_", "\n") for m in df["ablation"]]
+    x = list(range(len(df)))
+    fig, axes = plt.subplots(1, 2, figsize=(12, 4.5))
+    axes[0].bar([i - 0.2 for i in x], df["ssim_r2"], 0.4, label="SSIM R²")
+    axes[0].bar([i + 0.2 for i in x], df["psnr_r2"], 0.4, label="PSNR R²")
+    axes[0].set_xticks(list(x)); axes[0].set_xticklabels(labels, fontsize=8)
+    axes[0].set_ylabel("R² (test)"); axes[0].set_title("Ablation: test R² by variant")
+    axes[0].legend()
+    axes[1].bar(x, df["avg_R2_SSIM_PSNR_project_defined"], 0.6,
+                color=["#7f7f7f", "#7f7f7f", "#d62728", "#2ca02c"])
+    axes[1].set_xticks(list(x)); axes[1].set_xticklabels(labels, fontsize=8)
+    axes[1].set_ylabel("avg R² (project-defined)")
+    axes[1].set_title("Ablation: avg R² — C (all 25, red) vs D (14 selected, green)")
+    fig.tight_layout()
+    out = PLOTS_DIR / "ablation_comparison.png"
+    fig.savefig(out, dpi=150); plt.close(fig)
+    print(f"Saved {out}")
+
+
 def main() -> int:
     PLOTS_DIR.mkdir(parents=True, exist_ok=True)
     training_curves()
     pred_vs_actual()
     model_comparison()
+    ablation_chart()
     return 0
 
 
