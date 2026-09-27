@@ -65,6 +65,37 @@ Label population (all 890 classical pairs): SSIM `0.7710 ± 0.0991`
 [0.2442, 0.9664]; PSNR `17.021 ± 2.872` dB [9.69, 29.55].
 Test split (133): SSIM [0.4107, 0.9323], PSNR [10.98, 28.82] dB.
 
+### Image-size cheat-sheet (the three different numbers people mix up)
+
+| number | what it actually is | where |
+|---|---|---|
+| **600** | the width of every **preprocessed** image. Heights vary: 266–901, median 427, 140 distinct values. It is *not* 256 and *not* square. | `src/config.py:47` (`RESIZE_WIDTH`), `results/feature/preprocessing_log.csv` |
+| **224** | the **CNN's square input**. `letterbox()` resizes so the *longer* side becomes 224 (INTER_AREA), then black-pads to 224×224. 600×338 → 224×126 → 224×224; a portrait 600×901 → 149×224 → 224×224. 867 of 890 are landscape (pad top/bottom), 23 are portrait (pad left/right); the bars average ~30 % of one side. | `src/config.py:70` (`CNN_INPUT_SIZE`), `cnn/dataset.py:47-58` |
+| **256** | **channels, not pixels.** The 4th conv block outputs 256 feature maps; Global Average Pooling turns 14×14×256 into a **256-d vector**, which is the "256D Image Features" box in the architecture figure. (Unrelated second meaning: GLCM uses `levels=256` grey levels.) | `cnn/model.py:38-49`, `src/features.py:110` |
+
+Why 224 and not 256 (or 600):
+
+* **Divisibility.** 4 conv blocks each end in MaxPool2, so the height/width must be
+  divisible by 16: 224 → 112 → 56 → 28 → **14×14×256** → GAP → 256-d. 256 would give
+  16×16, which also works but needs **1.31×** the compute for no measured benefit.
+* **Cost.** Input is ~50 k px; the preprocessed images average ~251 k px, i.e. the
+  CNN sees ~20 % of the pixels. On the frozen 2-core box a full run is already
+  25–40 min per model; a 600-px-wide input would be ~5× that.
+* **No distortion.** Letterbox (not stretch) keeps the aspect ratio, so texture and
+  edge statistics are not warped — important because those are exactly what the
+  25 descriptors measure.
+* **The architecture is resolution-agnostic.** Because the image branch ends in
+  `AdaptiveAvgPool2d(1)` and has no flatten-to-dense layer, the *same* model code
+  accepts 256×256 or 320×320 unchanged; 224 is a compute choice, not a structural
+  constraint (`cnn/model.py:38-56`).
+* **The features do NOT use 224.** `extract_features` runs on the **full-resolution
+  600-px** preprocessed image (`scripts/build_feature_dataset.py:82`), so nothing is
+  lost to the downsample: the fusion combines full-resolution handcrafted
+  descriptors with a 224-px view of the same image.
+
+For a viva, the missing arrow in the architecture figure is worth adding:
+`preprocessed (600×H) → letterbox → 224×224×3 → CNN`.
+
 ---
 
 ## 2. Phase 0 — environment
