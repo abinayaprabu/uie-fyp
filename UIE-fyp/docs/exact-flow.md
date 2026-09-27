@@ -461,7 +461,9 @@ Three rules the code actually enforces (not just documents):
 | ablations A/B/C/D | `ablation_results.csv` |
 | U-Net result + paired tests | `results/enhancement/unet_128/{metrics.json,test_per_image.csv}` |
 | U-Net used the frozen config, test unseen | checkpoint config + id fingerprints, checked by `verify_enhancement.py` |
-| figures | `plots/` (14 PNGs, including `enhancement_samples.png` added after this audit was written) |
+| figures | `plots/` (14 PNGs, including `enhancement_samples.png`) |
+| ground-truth labels, slide-ready | `results/feature/ground_truth_quality_scores.csv` (image_name, split, ssim_actual, psnr_actual — 890 rows) |
+| the enhanced pixels themselves | `dataset/enhanced-test/*.png` (133 files, committed; independently re-verified §12 D1) |
 
 ---
 
@@ -471,10 +473,10 @@ Ranked by how much damage they can do in a viva or a fresh clone.
 **D1–D2 are real defects; D3–D5 are stale/missing documentation; D6–D8 are gaps
 and footguns.**
 
-### D1 — *"the enhanced PNGs are tracked"* is false, and they are gone
-`.gitignore` claims *"U-Net enhanced outputs … TRACKED since 2026-09-20 … they
-earn permanent storage in git"* and the HEAD commit message is *"Track
-dataset/enhanced-test/: durability for the 133 enhanced PNGs"*. Evidence against:
+### D1 — RESOLVED 2026-09-27 (was: *"the enhanced PNGs are tracked"* was false, and they were gone)
+
+**State at the time of this audit** (kept as the audit trail — this is what was
+actually observed):
 
 ```
 $ git ls-tree -r HEAD --name-only | grep -c enhanced-test     → 0
@@ -482,16 +484,45 @@ $ ls dataset/enhanced-test | wc -l                            → 0
 $ git check-ignore -v .../enhanced-test/UIEB_0.png            → (no match, so not ignored)
 ```
 
-The pattern was correctly un-ignored but the files were **never added**, and they
-are not in this working tree. Since `models/` is gitignored too (no `best_unet_128.pt`),
-the entire Track B verification chain is **not reproducible from the repository**:
-`scripts/evaluate_enhancement.py`, `scripts/verify_enhancement.py` and
-`scripts/make_enhancement_samples.py` all fail on missing inputs; only the
-CSV-based chart script runs. Recovery costs a ~124 min retrain + inference.
-**Fix:** `git add -f UIE-fyp/dataset/enhanced-test` (~40 MB) — it is the only
-artefact in this project that is expensive to regenerate.
-(The same is true of every checkpoint: RF/MLP are cheap, each CNN is 25–40 min,
-the U-Net 124 min. Decide deliberately what must be durable.)
+The pattern had been correctly un-ignored but the files were **never added**, so
+the commit message *"Track dataset/enhanced-test/…"* and the `.gitignore` claim
+*"TRACKED since 2026-09-20"* were both false, the PNGs had been destroyed with
+the sandbox, and — because `models/` is gitignored too — the whole Track B
+verification chain was unreproducible from the repository. D1 was the one real
+defect in §12, not a documentation lag.
+
+**Resolution.** The 133 PNGs were regenerated (U-Net retrained from the frozen
+Config A, run tag `unet_128_repro`), committed, and merged to `main` (merge
+commit `5e1f814`, session `arena/01a0bf4c-uie-fyp`). They were then mirrored onto
+this branch in `8d182b9`, together with `plots/enhancement_samples.png` and
+`results/enhancement/unet_128_repro/`:
+
+```
+UIE-fyp/dataset/enhanced-test/UIEB_*.png   133 files, ~55 MB on disk
+UIE-fyp/plots/enhancement_samples.png      raw | classical | U-Net | reference
+UIE-fyp/results/enhancement/unet_128_repro/{metrics.json,test_per_image.csv,
+                                            enhanced_test_manifest.csv,train_history.csv}
+```
+
+**Independent verification of the recovered pixels** (re-run 2026-09-27 in a
+separate sandbox, from the committed PNGs + freshly downloaded UIEB references,
+using `src.iqa.compute_ssim_psnr` and the frozen `resize_reference_like_preprocessed`):
+
+| check | result |
+|---|---|
+| per-image SSIM vs `unet_128_repro/test_per_image.csv` | max \|Δ\| **1.1e-16** |
+| per-image PSNR vs the same CSV | max \|Δ\| **3.6e-15** |
+| mean SSIM re-derived vs both `metrics.json` files | **0.800296** = 0.800296 = 0.800296 |
+| mean PSNR re-derived | **19.3242 dB** = 19.3242 = 19.3242 |
+| each PNG's grey mean vs the manifest's recorded `mean_enh` | max \|Δ\| **0.0000** |
+| U-Net − classical, re-derived from pixels alone | **+0.036648 SSIM** (win 102/133), **+2.2353 dB** (win 121/133) |
+
+So the retrain reproduced the original run exactly, and the committed pixels —
+not just the committed numbers — carry the result. `models/best_unet_128_repro.pt`
+remains gitignored; regenerating the pixels from scratch still costs a ~124 min
+retrain, but the pixels themselves are now permanent. The same decision still has
+to be made for the four quality-prediction checkpoints (RF/MLP cheap, each CNN
+25–40 min).
 
 ### D2 — the frozen-config benchmark document does not exist
 `src/config.py:126` cites `docs/enhancement-benchmark.md` as the measured
@@ -585,9 +616,12 @@ be extrapolation, not evaluation.
 So the expensive path is only needed to *regenerate pixels or checkpoints*, never
 to *read the numbers*.
 
-**This checkout's state (verified):** `dataset/` contains only
-`mirror_file_listing.json`; `dataset/enhanced-test/` is empty; `models/` does not
-exist. Every committed CSV/JSON/PNG in `results/` and `plots/` is present.
+**State of a fresh checkout:** `dataset/` holds `mirror_file_listing.json` plus the
+**133 committed enhanced PNGs** in `dataset/enhanced-test/` (so Track B can be
+re-verified against the committed metrics without retraining — see §12 D1); the
+raw, reference and preprocessed sets are gitignored and must be re-downloaded;
+`models/` does not exist. Every committed CSV/JSON/PNG in `results/` and `plots/`
+is present.
 
 ```bash
 # --- base (required before any model work) ---
