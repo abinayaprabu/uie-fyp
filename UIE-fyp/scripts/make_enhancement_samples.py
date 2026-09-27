@@ -54,7 +54,12 @@ def main() -> int:
               file=sys.stderr)
         return 1
 
-    df = pd.read_csv(QUALITY_CSV).sort_values("ssim").reset_index(drop=True)
+    # Only the sealed TEST split was ever enhanced (cnn.enhance --split test),
+    # so rows must come from test images; selection itself uses only the
+    # frozen label CSV's classical SSIM ordering (no enhancement metric).
+    split = pd.read_csv(FEATURE_RESULTS_DIR / "data_split.csv")
+    df = pd.read_csv(QUALITY_CSV).merge(split, on="image_name")
+    df = df[df.split == "test"].sort_values("ssim").reset_index(drop=True)
     n = len(df)
     pos = [round(i * (n - 1) / (args.rows - 1)) for i in range(args.rows)]
 
