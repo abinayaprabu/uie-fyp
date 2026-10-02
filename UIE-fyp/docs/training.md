@@ -91,6 +91,16 @@ model is asked to correct.
    checks re-run automatically once `models/best_enh224_*.pt` exist.
 4. `python scripts/test_nr_metrics.py` — UIQM/UCIQE sanity.
 
+## 5b. Completed run (2026-10-02)
+
+`enh224_featguided` — 80/80 epochs (no early stop; patience 12 never triggered),
+best epoch **74**, best validation **SSIM 0.6606 / PSNR 19.249 dB**, ~133 s per
+epoch (≈3.2 h total, 2 CPU threads). Checkpoint written at every validation
+improvement, final copy verified by `scripts/verify_final_model.py`
+(sha256 `34cf286b370d18ad…`, 1,188,211 parameters, features == the selected 10).
+History: `results/enhancement/enh224_featguided/train_history.csv`.
+The optional image-only ablation was **not** trained (final instruction).
+
 ## 6. Cost (measured)
 
 ~150 s per epoch on this 2-core sandbox for 39 iterations of batch 16

@@ -51,8 +51,9 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from cnn.dataset_pairs import aligned_reference, split_ids  # noqa: E402
 from src.config import (  # noqa: E402
-    ENHANCED_DIR, ENHANCEMENT_RESULTS_DIR, FEATURE_RESULTS_DIR, PREPROCESSED_DIR,
-    RAW_DIR, RESULTS_DIR,
+    ENHANCED_DIR, ENHANCEMENT_RESULTS_DIR, FEATURE_RESULTS_DIR,
+    HYBRID_RUN_GUIDED, HYBRID_RUN_IMAGE_ONLY, PREPROCESSED_DIR, RAW_DIR,
+    RESULTS_DIR,
 )
 from src.iqa import compute_ssim_psnr  # noqa: E402
 from src.metrics import (  # noqa: E402
@@ -152,9 +153,15 @@ def main() -> int:
     if not args.skip_unet and (ENHANCED_DIR / test_ids[0]).exists():
         systems["unet"] = ("Existing U-Net", lambda n: cv2.imread(
             str(ENHANCED_DIR / n), cv2.IMREAD_COLOR))
+    # Human-readable labels for the final table. The PROPOSED model is the
+    # feature-guided run; the image-only run is only ever the ablation.
+    tag_labels = {
+        HYBRID_RUN_GUIDED: "Feature-guided (proposed)",
+        HYBRID_RUN_IMAGE_ONLY: "Image-only CNN (ablation)",
+    }
     tags = run_dirs()
     for tag in tags:
-        systems[tag] = (tag, (lambda t: lambda n: cv2.imread(
+        systems[tag] = (tag_labels.get(tag, tag), (lambda t: lambda n: cv2.imread(
             str(ENHANCEMENT_RESULTS_DIR / t / "enhanced" / n),
             cv2.IMREAD_COLOR))(tag))
     if not tags:

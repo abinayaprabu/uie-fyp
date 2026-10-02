@@ -67,12 +67,20 @@ or its training depends on which cases are drawn.
 
 ## 6. Output files
 
+**Measured outcome (2026-10-02):** the final table is in
+`results/metrics/final_results.csv` / `.md` and the full interpretation — including
+the resolution controls and the fact that the proposed model does NOT beat the
+existing U-Net — is in **`docs/final_results.md`**.
+
 | File | Content |
 |---|---|
 | `results/metrics/final_results.csv` / `.md` | the final table Method × PSNR/SSIM/UIQM/UCIQE with CIs |
 | `results/metrics/enhancement_metrics.csv` | per-image metrics for every system |
 | `results/metrics/paired_comparisons.csv` | every paired comparison with CI, win/loss and p |
-| `results/metrics/comparison_images/*.png` | qualitative panels |
+| `results/metrics/comparison_images/*.png` | qualitative panels (best / median / failure / six wins) |
+| `results/metrics/resolution_roundtrip.csv` | controls A–D isolating the 224 round-trip cost |
+| `results/metrics/domain_matched_224.csv` | every system compared at a matched 224 px grid |
+| `results/metrics/feature_sensitivity.csv` | trained model re-run with normal / zeroed / shuffled features |
 | `results/enhancement/<run>/test_metrics.json` | per-run aggregate, next to its history |
 
 The committed U-Net results (`results/enhancement/unet_128*`, `plots/enhancement_*.png`,

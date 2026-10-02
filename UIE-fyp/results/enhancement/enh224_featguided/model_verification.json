@@ -1,0 +1,30 @@
+{
+  "run": "enh224_featguided",
+  "checkpoint": "/home/user/uie-fyp/UIE-fyp/models/best_enh224_featguided.pt",
+  "durable_copy": "/home/user/uie-fyp/UIE-fyp/results/enhancement/enh224_featguided/best_enh224_featguided.pt",
+  "sha256_prefix": "34cf286b370d18ad",
+  "n_parameters": 1188211,
+  "n_features": 10,
+  "feature_names": [
+    "red_ratio",
+    "dynamic_range",
+    "correlation",
+    "entropy",
+    "mean_blue",
+    "mean_value",
+    "mean",
+    "contrast",
+    "mean_saturation",
+    "variance"
+  ],
+  "best_epoch": 74,
+  "best_val_ssim": 0.6605917691980776,
+  "best_val_psnr": 19.249119834180412,
+  "epochs_completed": 80,
+  "feature_effect_zeroed_max_delta": 0.10696840286254883,
+  "feature_effect_shuffled_max_delta": 0.12090286612510681,
+  "train_ids_fingerprint": "02317209a3a5acff",
+  "val_ids_fingerprint": "12a871f98f64b156",
+  "test_ids_fingerprint": "cae970a0ebbfb1ac",
+  "checks_failed": []
+}
