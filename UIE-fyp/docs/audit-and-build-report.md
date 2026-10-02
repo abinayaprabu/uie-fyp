@@ -133,13 +133,13 @@ input on the sealed test split. That is worth knowing before anyone writes
 
 ### 1.9 Files to archive or delete
 
-**Nothing will be deleted without approval.** Proposal only: the old
-quality-prediction track (`cnn/{model,train,predict,evaluate}.py`,
-`scripts/{run_baselines,run_ablation,feature_ranking,feature_subset_evaluation,feature_correlation,make_plots}.py`,
-`results/cnn/*`) is superseded for the final deliverable but explains months of
-work and is the "prior work" the report compares against. Recommendation: keep
-it in place, and add a `docs/legacy.md` index that says which files are prior
-work; move only if you explicitly approve an archive move.
+**Outcome (2026-10-02):** the old quality-prediction code was first moved to
+`archive/quality_prediction/` (nothing deleted, README + git history), then, in
+the second cleanup pass, the archived **code and figures** were deleted after
+`git grep` proved nothing in the final pipeline references them (restore command
+in the README). The archived **result tables are kept** because the report cites
+their numbers as prior work. Full FILE | ACTION | REASON tables:
+`docs/cleanup-report.md`.
 
 ### 1.10 Exact modifications required (and made)
 
@@ -323,7 +323,7 @@ other papers' tables; "our model is SOTA"; and the OLD 14-feature set being
 | 25 | Guidance sanity check (normal/shuffled/zeroed) | DONE in the shape test (max |Δ| 2.96e-2) |
 | 26 | Leakage audit script | DONE — 12 checks pass |
 | 27 | Modular layout, one source of truth | DONE (see the configs/ note in 1.1) |
-| 28 | Archive obsolete experiments after preserving results | PROPOSAL only (1.9) |
+| 28 | Archive obsolete experiments after preserving results | DONE — archived, then still-unused code deleted; results kept (`docs/cleanup-report.md`) |
 | 29 | Documentation A–P + diagram | TODO — indexes exist, explanations pending |
 | 30 | Distinct purpose per statistical method | DONE — no ANOVA/t-tests for complexity |
 | 31 | Experiments E1–E10 | E1–E7 done or running; E8–E10 pending |

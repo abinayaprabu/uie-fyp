@@ -78,3 +78,30 @@ Only `__pycache__/` directories and `.pyc` files inside the project (excluding
 the virtualenv). Nothing else. The dataset, the U-Net baseline, its verified
 results, the labels, the split, the 25-feature extraction and all documentation
 are intact.
+
+---
+
+## 4. Second cleanup (same day, after the final architecture was confirmed working)
+
+The specification allows the archived prediction-track material to be deleted
+once it is provably unused. The check performed before deleting: `git grep` for
+every module/script name in the kept pipeline (no hits), plus the fact that the
+files are preserved in git history (commit `383206e`) and restored with a
+one-line command.
+
+| File / directory | Action | Reason |
+|---|---|---|
+| `archive/quality_prediction/code/**` (11 files) | DELETE (in git history) | superseded predictors; nothing in the final pipeline imports them; documented in `archive/quality_prediction/README.md` with the restore command |
+| `archive/quality_prediction/plots/**` (8 figures) | DELETE (in git history) | figures of the rejected direction; could be mistaken for final results |
+| `archive/quality_prediction/results/**` (14 CSVs/JSONs) | KEEP | the report cites these numbers as prior work; an examiner must be able to verify them |
+| `results/enhancement/smoke_overfit6/` | DELETE | superseded by `smoke_overfit6_long/` (the run quoted in the docs) |
+| `results/enhancement/enh224_imgonly/` | DELETE | partial run of the OPTIONAL image-only ablation, superseded and restarted from scratch if time allows |
+| `__pycache__/`, `*.pyc` | DELETE | caches; regenerated automatically |
+
+Kept deliberately (do-not-delete list of the specification): the UIEB dataset,
+the frozen preprocessing and feature extraction, `results/feature/**` (labels,
+split, OLD-14), `results/statistics/**`, `results/feature_selection/**`,
+`cnn/feature_guided/**` + the final checkpoint (written under
+`results/enhancement/<run>/best_<run>.pt` and `models/`), all U-Net baseline
+evidence, `results/metrics/**` and `results/visualizations/**`, all
+documentation including `docs/viva_notes.md`, and every reproduction script.
