@@ -359,7 +359,8 @@ yet.
   information stays in the image branch.
 - **Identity at initialisation** makes the ablation clean: at step 0 the
   guided model equals the image-only model, so any later difference is learned
-  from the features.
+  from the features. The modulation is implemented as ``F·(1+γ) + β`` (the
+  specification's ``γ·F + β`` under the reparameterisation γ' = 1 + γ).
 - **Everything is train/val only** until the sealed test evaluation; see
   `docs/feature_selection.md` and `scripts/leakage_audit.py`.
 

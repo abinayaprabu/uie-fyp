@@ -46,6 +46,11 @@ is *exactly* the image-only model. Decoder: 256→128→64→32→16 with 2× bi
 upsampling and skip connections (128×28×28, 64×56×56, 32×112×112), then a
 1×1/3×3 convolution to 3 channels and a sigmoid (range [0, 1]).
 
+The modulation is written ``F·(1+γ) + β`` (standard FiLM). The specification's
+``γ·F + β`` is the same family under the reparameterisation γ' = 1 + γ; the
+``1 +`` form is used because it makes the initialisation exactly the identity
+(γ = β = 0), which is what makes the ablation start from a level field.
+
 ## 4. Optimisation
 
 | Setting | Value |
@@ -110,10 +115,13 @@ python -m cnn.feature_guided.train --variant feature_guided --run-tag smoke_over
 python -m cnn.feature_guided.train --variant image_only  --threads 2
 python -m cnn.feature_guided.train --variant feature_guided --threads 2
 # 5. enhance the sealed test split and evaluate
-python -m cnn.feature_guided.enhance --run enh224_imgonly   --split test
 python -m cnn.feature_guided.enhance --run enh224_featguided --split test
-python scripts/evaluate_hybrid.py
+python scripts/verify_final_model.py --run enh224_featguided   # checkpoint + features + forward pass
+python scripts/evaluate_hybrid.py                              # sealed-test table + panels
 ```
+
+(If the optional image-only ablation was trained too, enhance and evaluate it
+with the same two commands and its row appears automatically.)
 
 ## 8. What the training log records
 
