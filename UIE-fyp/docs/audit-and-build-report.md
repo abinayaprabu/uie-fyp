@@ -111,7 +111,7 @@ CI [0.028532, 0.045499], 102W/31L; ΔPSNR +2.2353 dB, CI [1.8781, 2.5879],
 121W/12L).
 
 No-reference metrics for the same three systems were computed for the first
-time today by `scripts/evaluate_enhancement_hybrid.py`
+time today by `scripts/evaluate_hybrid.py`
 (`results/metrics/final_results.csv`, n = 133, same images):
 
 | Method | PSNR | SSIM | UIQM | UCIQE |
@@ -152,7 +152,7 @@ work; move only if you explicitly approve an archive move.
 | Leakage audit | `scripts/leakage_audit.py` | done |
 | Proposed model + drivers | `cnn/feature_guided/`, `cnn/feature_guided/train.py`, `cnn/feature_guided/enhance.py` | done |
 | Pre-flight tests | `scripts/test_hybrid_shapes.py`, `scripts/test_nr_metrics.py` | done |
-| Test-set evaluation + ablation + figures | `scripts/evaluate_enhancement_hybrid.py`, `scripts/run_hybrid_ablation.py` | TODO |
+| Test-set evaluation + ablation + figures | `scripts/evaluate_hybrid.py`, `scripts/run_hybrid_ablation.py` | TODO |
 | Documentation set (§29) | `docs/{architecture,statistical_analysis,feature_selection,training,metrics}_explanation.md`, `docs/viva_questions.md` | TODO |
 
 No change to preprocessing, features, the split, or any committed label file.

@@ -126,24 +126,26 @@ def _blocks(img2d: np.ndarray, block: int = EME_BLOCK) -> np.ndarray:
 
 
 def _eme(img2d: np.ndarray, block: int = EME_BLOCK) -> float:
-    """Enhancement Measure Estimation: mean 20*log10(max/min) over blocks."""
-    blks = _blocks(img2d, block)
-    if blks.size == 0:
+    """Enhancement Measure Estimation: mean 20*log10(max/min) over blocks.
+
+    Vectorised: the image is cropped to whole blocks and reshaped into a
+    (k1, k2, block*block) array; the arithmetic is identical to the double
+    loop over blocks in the published definition.
+    """
+    h, w = img2d.shape
+    k1, k2 = h // block, w // block
+    if k1 == 0 or k2 == 0:
         return 0.0
-    k1, k2 = blks.shape[0], blks.shape[1]
-    mx = blks.max(axis=(2, 3))
-    # Floor the block minimum at 1 intensity level of the gradient scale. This
-    # is the standard guard against log(0); without it, blocks whose gradient
-    # minimum is 0 would contribute an unbounded 20*log10(max/eps) term. The
-    # convention is applied identically to every method being compared.
-    mn = np.maximum(blks.min(axis=(2, 3)), 1.0)
-    valid = blks.max(axis=(2, 3)) > 0
-    total = 0.0
-    if valid.any():
-        ratios = mx[valid] / mn[valid]
-        total = float(np.sum(20.0 * np.log10(ratios)))
-    # divide by the TOTAL number of blocks: a skipped (all-zero) block counts
-    # as zero, exactly like the reference double loop in the paper.
+    b = (img2d[:k1 * block, :k2 * block]
+         .reshape(k1, block, k2, block)
+         .transpose(0, 2, 1, 3)
+         .reshape(k1, k2, block * block))
+    mx = b.max(axis=2)
+    # Guard against log(0): lowest expressible level of the block statistic.
+    mn = np.maximum(b.min(axis=2), 1.0)
+    valid = mx > 0
+    total = float(np.sum(20.0 * np.log10(mx[valid] / mn[valid]))) if valid.any() else 0.0
+    # divide by the TOTAL number of blocks: an all-zero block contributes zero
     return total / (k1 * k2)
 
 
@@ -176,22 +178,26 @@ def _plip_sub(a: float, b: float, lam: float = PLIP_LAMBDA) -> float:
 def uiconm(rgb: np.ndarray) -> float:
     """Underwater Image Contrast Measure: logAMEE with PLIP operators.
 
-    Vectorised over 8x8 blocks; identical arithmetic to the scalar form
-    (``PLIP_sub``/``PLIP_add`` are applied elementwise with the same guards,
-    and skipped blocks count as zero against the total block count).
+    Vectorised over blocks; identical arithmetic to the scalar form
+    (``_plip_sub`` / ``_plip_add`` are applied elementwise with the same
+    guards, and skipped blocks count as zero).
     """
     a = _check(rgb)
     gray = a.mean(axis=2)                    # (R+G+B)/3
-    blks = _blocks(gray)
-    if blks.size == 0:
+    h, w = gray.shape
+    k1, k2 = h // EME_BLOCK, w // EME_BLOCK
+    if k1 == 0 or k2 == 0:
         return 0.0
-    k1, k2 = blks.shape[0], blks.shape[1]
-    mx = blks.max(axis=(2, 3)).ravel()
-    mn = blks.min(axis=(2, 3)).ravel()
-    den_sub = 1.0 - mn / PLIP_LAMBDA          # PLIP subtraction denominator
-    den_add = mx + mn - (mx * mn) / PLIP_LAMBDA   # PLIP addition
+    b = (gray[:k1 * EME_BLOCK, :k2 * EME_BLOCK]
+         .reshape(k1, EME_BLOCK, k2, EME_BLOCK)
+         .transpose(0, 2, 1, 3)
+         .reshape(k1, k2, EME_BLOCK * EME_BLOCK))
+    mx = b.max(axis=2)
+    mn = b.min(axis=2)
+    den_sub = 1.0 - mn / PLIP_LAMBDA
     num = np.where(den_sub > 1e-12,
                    (mx - mn) / np.where(den_sub > 1e-12, den_sub, 1.0), 0.0)
+    den_add = mx + mn - (mx * mn) / PLIP_LAMBDA
     c = np.where(den_add > 1e-12,
                  num / np.where(den_add > 1e-12, den_add, 1.0), 0.0)
     vals = np.where(c > 0, c * np.log(np.where(c > 0, c, 1.0)), 0.0)

@@ -123,7 +123,7 @@ The same warning applies: UCIQE rewards colour and contrast, not correctness.
   qualitative panels (`results/metrics/comparison_images/`) and by the
   no-reference scores, and it is reported as such.
 - **No statistical claim is made about NR metrics unless the paired tests in
-  `scripts/evaluate_enhancement_hybrid.py` actually show it** (wins/losses,
+  `scripts/evaluate_hybrid.py` actually show it** (wins/losses,
   percentile-bootstrap CI, Wilcoxon signed-rank over the same 133 images).
 
 ## 6. Verification of the metric code
@@ -132,7 +132,7 @@ The same warning applies: UCIQE rewards colour and contrast, not correctness.
   greyscaling lowers UICM and UCIQE; the fast vectorised EME/UIConM match the
   plain double-loop definitions to ≤ 1e-9; runtime ~0.07 s per full-resolution
   image. All checks pass.
-- `scripts/evaluate_enhancement_hybrid.py` — before reporting anything, it
+- `scripts/evaluate_hybrid.py` — before reporting anything, it
   recomputes the classical pipeline's SSIM/PSNR for all 133 test images and
   compares them with the committed label file. Observed maximum deviation:
   `1.1e-16` (SSIM) and `3.6e-15` (PSNR), i.e. the metric definition in the

@@ -19,7 +19,7 @@ required for reproducibility was removed.*
 | `scripts/feature_subset_evaluation.py` | ARCHIVE | feature-subset search for the predictors |
 | `scripts/feature_correlation.py` | ARCHIVE | correlation study over all rows; superseded by `stats/correlation.py` (train only) |
 | `scripts/make_plots.py` | ARCHIVE | plots for the prediction track; the final plots are produced separately |
-| `scripts/verify_results.py` | ARCHIVE | verifies the predictor runs (it imports `cnn.model`); the final evaluation has its own checks (`leakage_audit.py`, `evaluate_enhancement_hybrid.py`, `verify_enhancement.py`) |
+| `scripts/verify_results.py` | ARCHIVE | verifies the predictor runs (it imports `cnn.model`); the final evaluation has its own checks (`leakage_audit.py`, `evaluate_hybrid.py`, `verify_enhancement.py`) |
 | `results/cnn/**` (4 runs) | ARCHIVE | predictor metrics/histories; cited as *prior work* in the report |
 | `results/comparison/**` | ARCHIVE | predictor baseline/ablation tables; cited as *prior work* |
 | `plots/model_comparison.png`, `predicted_vs_actual_{ssim,psnr}.png`, `training_curve_{mlp_final,hybrid_all25,hybrid_final,image_only_nofeat}.png`, `ablation_comparison.png` | ARCHIVE | predictor-track figures |

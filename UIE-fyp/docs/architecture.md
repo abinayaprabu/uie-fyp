@@ -3,6 +3,14 @@
 What each file does, which technique it implements, and why that technique was chosen.
 Read alongside `docs/methodology-audit.md`, which records what is currently broken.
 
+> **UPDATE 2026-10-02 — the final architecture.** The file-by-file sections
+> below describe the repository as it stood before the feature-guided build.
+> The final proposed model (and the files that implement it) is described in
+> the appended section **"Final architecture — feature-guided enhancer"** at
+> the end of this document. Sections above that describe the old
+> quality-prediction models now refer to code that has been archived under
+> `archive/quality_prediction/` (see `docs/cleanup-report.md`).
+
 ## 1. System-level view
 
 Three packages with strictly separated responsibilities:
@@ -293,3 +301,70 @@ yet.
 6. **Ablation against the selection claim.** The project does not assume feature
    selection helps; C vs D is designed to find out, and the code commits in advance to
    reporting a negative result honestly.
+
+
+---
+
+# Final architecture — feature-guided enhancer (2026-10-02)
+
+```
+                INPUT IMAGE (underwater, 890 UIEB pairs)
+                          |
+                    PREPROCESSING  (frozen: 600 px -> gray-world -> CLAHE -> bilateral -> gamma)
+                          |
+        +-----------------+------------------+
+        |                                    |
+   letterbox 224x224                  FULL-resolution image
+        |                                    |
+   CNN ENCODER                         25 handcrafted features
+   3->32->64->128->256                        |
+   spatial: 224/112/56/28/14          Stage-A statistics (TRAIN only)
+        |                                    |
+   bottleneck 256x14x14              selected set (10 features)
+        |                                    |
+        |                          MLP k->32->2*256  ->  gamma, beta (FiLM)
+        |                                    |
+        +-----------> F·(1+gamma)+beta <-----+
+                          |
+                    CNN DECODER (skips from 128x28, 64x56, 32x112)
+                    256->128->64->32->16 -> 3 channels, sigmoid
+                          |
+                    un-letterbox + resize to reference geometry
+                          |
+                    ENHANCED IMAGE
+                          |
+              PSNR / SSIM (full-reference)  +  UIQM / UCIQE (no-reference)
+```
+
+## Module contracts (what each file does, shapes included)
+
+| File | Class / function | In → Out |
+|---|---|---|
+| `cnn/feature_guided/encoder.py` | `EncoderBlock`, `HybridEncoder` | (B,3,224,224) → bottleneck (B,256,14,14) + pooled skips (B,32,112,112), (B,64,56,56), (B,128,28,28) |
+| `cnn/feature_guided/conditioning.py` | `FeatureConditioning` | (B,k) → γ,β (B,256); `F·(1+γ)+β` broadcast over 14×14; zero-initialised (identity at step 0) |
+| `cnn/feature_guided/decoder.py` | `DecoderBlock`, `EnhancementDecoder` | (B,256,14,14) + skips → (B,3,224,224) in [0,1] |
+| `cnn/feature_guided/model.py` | `FeatureGuidedEnhancer` | (B,3,224,224) [+ (B,k)] → (B,3,224,224); `use_features=False` gives the image-only twin |
+| `cnn/feature_guided/dataset.py` | `HybridPairs`, `fit_feature_scaler`, `load_selected_features` | returns (image, features, target, name); scaler fitted on TRAIN only; features cached from the full-resolution image |
+| `cnn/feature_guided/losses.py` | `L1Loss`, `SSIMLoss`, `CombinedLoss`, `build_loss` | L1 primary; optional L1+λ(1−SSIM) |
+| `cnn/feature_guided/train.py` | driver | `--variant image_only\|feature_guided`; identical settings otherwise; writes history/config/checkpoints |
+| `cnn/feature_guided/enhance.py` | `enhance_array`, `enhance_split`, `load_model` | checkpoint → enhanced PNGs at the reference geometry |
+
+## Why the design is what it is
+
+- **The image is the main input** because enhancement is spatial
+  reconstruction; global 25-feature scalars cannot place structures (measured
+  in `docs/feasibility-feature-only-enhancement.md`).
+- **The features are guidance, not input** — FiLM at the bottleneck lets the
+  decoder modulate its learned spatial responses per image while the spatial
+  information stays in the image branch.
+- **Identity at initialisation** makes the ablation clean: at step 0 the
+  guided model equals the image-only model, so any later difference is learned
+  from the features.
+- **Everything is train/val only** until the sealed test evaluation; see
+  `docs/feature_selection.md` and `scripts/leakage_audit.py`.
+
+## Related documents
+
+`docs/feature_selection.md` · `docs/training.md` · `docs/evaluation.md` ·
+`docs/metrics_explanation.md` · `docs/viva_notes.md` ·
+`docs/audit-and-build-report.md` · `docs/cleanup-report.md`
