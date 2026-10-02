@@ -1,0 +1,5 @@
+comparison,mean_delta,median_delta,delta_std,win,loss,tie,wilcoxon_p,delta_ci95,metric,note
+classical - raw,0.003372,0.01747,0.117278,76,57,0,0.433825,"[-0.016565, 0.022765]",ssim,existing preprocessing vs untouched input
+classical - raw,0.025631,0.460194,4.691988,73,60,0,0.558526,"[-0.796381, 0.807375]",psnr,existing preprocessing vs untouched input
+classical - raw,0.432271,0.388945,0.807133,92,41,0,0.0,"[0.303781, 0.570763]",uiqm,existing preprocessing vs untouched input
+classical - raw,2.14348,2.433724,3.770413,91,42,0,0.0,"[1.521852, 2.7868]",uciqe,existing preprocessing vs untouched input

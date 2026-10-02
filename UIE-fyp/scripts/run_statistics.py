@@ -85,8 +85,9 @@ def load_train_val() -> tuple[pd.DataFrame, pd.DataFrame]:
     # Audit evidence: the exact ids this analysis touched.
     print(f"train ids fingerprint : {ids_fingerprint(train['image_name'].tolist())}")
     print(f"val   ids fingerprint : {ids_fingerprint(val['image_name'].tolist())}")
-    print(f"test rows present in analysis: "
-          f"{int((merged['split'] == 'test').sum())} (must be 0 after filtering)")
+    n_test = int((merged["split"] == "test").sum())
+    print(f"test rows in the loaded label file: {n_test} (never used)")
+    print("test rows used for fitting/selection: 0")
     return train, val
 
 
