@@ -24,7 +24,7 @@ preprocessed image on the fly, which is what a real deployment would do; the
 verification script checks that the two agree exactly.
 
 Usage:
-    python -m cnn.enhance_hybrid --run enh224_featguided --split test
+    python -m cnn.feature_guided.enhance --run enh224_featguided --split test
 """
 from __future__ import annotations
 
@@ -37,10 +37,10 @@ import numpy as np
 import pandas as pd
 import torch
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 from cnn.dataset import letterbox  # noqa: E402
 from cnn.dataset_pairs import split_ids, to_tensor, to_uint8  # noqa: E402
-from cnn.hybrid.model import FeatureGuidedEnhancer  # noqa: E402
+from cnn.feature_guided.model import FeatureGuidedEnhancer  # noqa: E402
 from src.config import (  # noqa: E402
     FEATURE_RESULTS_DIR, HYBRID_INPUT_SIZE, MODELS_DIR, PREPROCESSED_DIR,
 )

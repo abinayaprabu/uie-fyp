@@ -71,7 +71,7 @@ sealed test split (committed so they cannot be lost again).
 
 - Existing baseline (prior work): `cnn/unet.py::EnhancementUNet` (472,259
   params) trained by `cnn/train_enhance.py` on 128-px crops.
-- Proposed model (this build): `cnn/hybrid/` — encoder (32→64→128→256 at
+- Proposed model (this build): `cnn/feature_guided/` — encoder (32→64→128→256 at
   112/56/28/14), FiLM conditioning in the bottleneck, U-Net decoder with skips
   (14→28→56→112→224), 3-channel sigmoid output. **1,188,211 params** with the
   feature branch, **1,170,963** image-only (the ablation twin).
@@ -91,8 +91,8 @@ committed U-Net numbers bit-identically.
 ### 1.7 Training scripts
 
 Prior work: `cnn/train.py` (quality-prediction models), `cnn/train_enhance.py`
-(U-Net baseline). New: `cnn/train_hybrid.py` (both variants, identical settings
-except the branch) and `cnn/enhance_hybrid.py` (inference for the sealed test
+(U-Net baseline). New: `cnn/feature_guided/train.py` (both variants, identical settings
+except the branch) and `cnn/feature_guided/enhance.py` (inference for the sealed test
 split). Both drivers refuse to run with mismatched split fingerprints.
 
 ### 1.8 Existing results
@@ -150,7 +150,7 @@ work; move only if you explicitly approve an archive move.
 | Stage-A code | `stats/` (6 modules + `__init__`) | done |
 | Stage-A driver + evidence | `scripts/run_statistics.py`, `results/statistics/` | done |
 | Leakage audit | `scripts/leakage_audit.py` | done |
-| Proposed model + drivers | `cnn/hybrid/`, `cnn/train_hybrid.py`, `cnn/enhance_hybrid.py` | done |
+| Proposed model + drivers | `cnn/feature_guided/`, `cnn/feature_guided/train.py`, `cnn/feature_guided/enhance.py` | done |
 | Pre-flight tests | `scripts/test_hybrid_shapes.py`, `scripts/test_nr_metrics.py` | done |
 | Test-set evaluation + ablation + figures | `scripts/evaluate_enhancement_hybrid.py`, `scripts/run_hybrid_ablation.py` | TODO |
 | Documentation set (§29) | `docs/{architecture,statistical_analysis,feature_selection,training,metrics}_explanation.md`, `docs/viva_questions.md` | TODO |
@@ -257,7 +257,7 @@ was edited, renumbered, or overwritten.
 **C. Delete.** Nothing. See 1.9 for the archive *proposal* (needs approval).
 
 **D. Create.** `stats/`, `scripts/run_statistics.py`, `scripts/leakage_audit.py`,
-`cnn/hybrid/`, `cnn/train_hybrid.py`, `cnn/enhance_hybrid.py`,
+`cnn/feature_guided/`, `cnn/feature_guided/train.py`, `cnn/feature_guided/enhance.py`,
 `src/nr_metrics.py`, `scripts/test_hybrid_shapes.py`,
 `scripts/test_nr_metrics.py`, `results/statistics/`, this report. Still to
 create: the hybrid evaluation/ablation drivers and the documentation set.

@@ -21,7 +21,7 @@ DESIGN DECISIONS (each one is defensible in the viva)
    is the letterboxed aligned reference (same geometry, both via the frozen
    ``cnn.dataset.letterbox``).  The network learns to map one to the other;
    the un-letterbox + resize back to the preprocessed geometry happens at
-   evaluation time (documented resampling, see ``cnn/enhance_hybrid.py``).
+   evaluation time (documented resampling, see ``cnn/feature_guided/enhance.py``).
 4. **Augmentation is the Klein four-group of flips only**, applied identically
    to input and target (``paired_flips``).  90-degree rotations are EXCLUDED
    because the model consumes cached GLCM-based features: rotating the image

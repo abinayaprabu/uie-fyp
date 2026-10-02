@@ -26,8 +26,8 @@ from pathlib import Path
 import torch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from cnn.hybrid.conditioning import FeatureConditioning  # noqa: E402
-from cnn.hybrid.model import FeatureGuidedEnhancer, count_params  # noqa: E402
+from cnn.feature_guided.conditioning import FeatureConditioning  # noqa: E402
+from cnn.feature_guided.model import FeatureGuidedEnhancer, count_params  # noqa: E402
 
 torch.manual_seed(42)
 K = 10                     # a stand-in for "whatever Stage A selected"

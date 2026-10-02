@@ -150,7 +150,7 @@ def main() -> int:
     # ---------------------------------------------------------------- 4
     print("\n[4] augmentation is TRAIN-only")
     import torch
-    from cnn.hybrid.dataset import HybridPairs, fit_feature_scaler, load_selected_features
+    from cnn.feature_guided.dataset import HybridPairs, fit_feature_scaler, load_selected_features
     names = load_selected_features()
     scaler = fit_feature_scaler(names)
     check("train dataset augment=True",
@@ -166,7 +166,7 @@ def main() -> int:
     _, _, target, name = ds[0]
     check("dataset returns (image, features, target, name)",
           target.shape == (3, 224, 224))
-    src = (Path(__file__).resolve().parent.parent / "cnn" / "hybrid" / "dataset.py").read_text()
+    src = (Path(__file__).resolve().parent.parent / "cnn" / "feature_guided" / "dataset.py").read_text()
     check("dataset module never feeds the reference into the features",
           "extract_features" not in src and "REFERENCE_DIR / name" not in src)
     for ckpt_path in ckpts:

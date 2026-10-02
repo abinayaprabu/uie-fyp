@@ -20,9 +20,9 @@ from __future__ import annotations
 import torch
 from torch import nn
 
-from cnn.hybrid.conditioning import FeatureConditioning
-from cnn.hybrid.decoder import EnhancementDecoder
-from cnn.hybrid.encoder import HybridEncoder
+from cnn.feature_guided.conditioning import FeatureConditioning
+from cnn.feature_guided.decoder import EnhancementDecoder
+from cnn.feature_guided.encoder import HybridEncoder
 
 
 class FeatureGuidedEnhancer(nn.Module):

@@ -1,0 +1,14 @@
+# Final selected handcrafted features
+# Produced by scripts/run_statistics.py (TRAIN for tests, VALIDATION for permutation importance; TEST never read).
+# n_features = 10
+
+1. red_ratio
+2. dynamic_range
+3. correlation
+4. entropy
+5. mean_blue
+6. mean_value
+7. mean
+8. contrast
+9. mean_saturation
+10. variance

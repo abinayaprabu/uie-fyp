@@ -2,8 +2,8 @@
 
 Usage
 -----
-    python -m cnn.train_hybrid --variant feature_guided      # the proposed model
-    python -m cnn.train_hybrid --variant image_only          # the ablation twin
+    python -m cnn.feature_guided.train --variant feature_guided      # the proposed model
+    python -m cnn.feature_guided.train --variant image_only          # the ablation twin
 
 Optional flags used by the required pre-flight tests:
     --limit-train 8        train on the first 8 pairs (overfit / smoke test)
@@ -37,13 +37,13 @@ import pandas as pd
 import torch
 from torch.utils.data import DataLoader
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 from cnn.dataset_pairs import aligned_reference, ids_fingerprint, split_ids  # noqa: E402
-from cnn.hybrid.dataset import (  # noqa: E402
+from cnn.feature_guided.dataset import (  # noqa: E402
     HybridPairs, fit_feature_scaler, load_selected_features,
 )
-from cnn.hybrid.losses import build_loss  # noqa: E402
-from cnn.hybrid.model import FeatureGuidedEnhancer, count_params  # noqa: E402
+from cnn.feature_guided.losses import build_loss  # noqa: E402
+from cnn.feature_guided.model import FeatureGuidedEnhancer, count_params  # noqa: E402
 from src.config import (  # noqa: E402
     ENHANCEMENT_RESULTS_DIR, FEATURE_RESULTS_DIR, HYBRID_BATCH_SIZE,
     HYBRID_INPUT_SIZE, HYBRID_LAMBDA_SSIM, HYBRID_LOSS, HYBRID_LR,
@@ -80,7 +80,7 @@ def validate_full_res(model, val_ids, feature_names, scaler) -> dict:
     """
     import cv2
 
-    from cnn.enhance_hybrid import enhance_array  # local import (no cycle)
+    from cnn.feature_guided.enhance import enhance_array  # local import (no cycle)
 
     model.eval()
     rows = pd.read_csv(QUALITY_CSV).set_index("image_name")
