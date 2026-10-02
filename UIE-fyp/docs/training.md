@@ -61,7 +61,7 @@ upsampling and skip connections (128×28×28, 64×56×56, 32×112×112), then a
 | Early stopping | patience 12 epochs without validation-SSIM improvement |
 | Seed | 42 (python/numpy/torch) |
 | Threads | 2 (this sandbox) |
-| Checkpoints | `models/best_<tag>.pt`, `models/last_<tag>.pt`, plus a durable copy `results/enhancement/<tag>/best_<tag>.pt` that is kept in git |
+| Checkpoints | `models/best_<tag>.pt` plus a byte-identical durable copy `results/enhancement/<tag>/best_<tag>.pt` (kept in git). Both are rewritten at EVERY validation improvement, so an interrupted multi-hour run still leaves the best model on disk |
 
 Augmentation: paired horizontal/vertical/both flips only (the Klein four
 group), applied identically to input and target and **never** to validation or

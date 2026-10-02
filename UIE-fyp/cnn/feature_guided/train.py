@@ -206,6 +206,16 @@ def build_and_train(variant: str, run_tag: str, seed: int, epochs: int | None,
                                   for k, t in model.state_dict().items()}}
                 bad = 0
                 row["is_best"] = True
+                # Crash safety: write the best checkpoint DURING the run, not
+                # only at the end. A multi-hour CPU run must not lose hours of
+                # progress if the process is interrupted.
+                if save:
+                    save_checkpoint(MODELS_DIR / f"best_{run_tag}.pt",
+                                    out_dir / f"best_{run_tag}.pt", best,
+                                    run_tag, variant, use_features, feature_names,
+                                    scaler, n_params, seed, loss_name, lam,
+                                    train_ids, val_ids, test_ids, ds_tr, val_ids,
+                                    len(history) + 1)
             else:
                 bad += 1
             print(f"  epoch {epoch:3d}  train={train_loss:.5f}  "
@@ -224,50 +234,66 @@ def build_and_train(variant: str, run_tag: str, seed: int, epochs: int | None,
 
     ckpt_path = None
     if save and best["state"] is not None:
-        MODELS_DIR.mkdir(parents=True, exist_ok=True)
         ckpt_path = MODELS_DIR / f"best_{run_tag}.pt"
-        torch.save({
-            "model_name": "feature_guided_enhancer",
-            "variant": variant,
-            "use_features": use_features,
-            "run_tag": run_tag,
-            "arch": {
-                "n_features": len(feature_names),
-                "encoder_widths": [32, 64, 128, 256],
-                "decoder_widths": [128, 64, 32, 16],
-                "input_size": HYBRID_INPUT_SIZE,
-                "n_params": n_params,
-            },
-            "feature_names": feature_names,
-            "scaler_mean": scaler.mean_.tolist(),
-            "scaler_scale": scaler.scale_.tolist(),
-            "state_dict": best["state"],
-            "seed": seed,
-            "best_epoch": best["epoch"],
-            "best_val_ssim": best["ssim"],
-            "best_val_psnr": best["psnr"],
-            "loss": {"name": loss_name or HYBRID_LOSS,
-                     "lambda_ssim": lam if lam is not None else HYBRID_LAMBDA_SSIM},
-            "train_ids_fingerprint": ids_fingerprint(train_ids),
-            "val_ids_fingerprint": ids_fingerprint(val_ids),
-            "test_ids_fingerprint": ids_fingerprint(test_ids),
-            "n_train": len(ds_tr), "n_val": len(val_ids),
-            "epochs_completed": len(history),
-        }, ckpt_path)
+        save_checkpoint(ckpt_path, out_dir / f"best_{run_tag}.pt", best,
+                        run_tag, variant, use_features, feature_names, scaler,
+                        n_params, seed, loss_name, lam, train_ids, val_ids,
+                        test_ids, ds_tr, len(val_ids), len(history))
         print(f"Saved {ckpt_path}")
-        # Durability copy: the sandbox has destroyed gitignored files before.
-        # results/ is tracked, so keep a byte-identical copy of the checkpoint
-        # next to the run's metrics (the .gitignore explicitly allows this one
-        # path; ~5 MB per run).
-        import shutil
-        durable = out_dir / f"best_{run_tag}.pt"
-        shutil.copyfile(ckpt_path, durable)
-        print(f"Saved durable copy {durable}")
+        print(f"Saved durable copy {out_dir / f'best_{run_tag}.pt'}")
     print(f"History -> {out_dir / 'train_history.csv'}")
     if best["state"] is not None:
         print(f"Best val SSIM {best['ssim']:.4f} @ epoch {best['epoch']} "
               f"(val PSNR {best['psnr']:.3f} dB)")
     return ckpt_path
+
+
+def save_checkpoint(ckpt_path, durable_path, best, run_tag, variant,
+                    use_features, feature_names, scaler, n_params, seed,
+                    loss_name, lam, train_ids, val_ids, test_ids, ds_tr,
+                    n_val, epochs_completed) -> None:
+    """Write the best checkpoint to models/ AND to a durable copy in results/.
+
+    ``results/`` is tracked by git (the .gitignore explicitly allows
+    ``results/enhancement/**/best_*.pt``), so the copy survives a sandbox reset
+    that would wipe the git-ignored ``models/`` directory. Keeping this in one
+    function means the in-loop save and the final save cannot drift apart.
+    """
+    import shutil
+
+    MODELS_DIR.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "model_name": "feature_guided_enhancer",
+        "variant": variant,
+        "use_features": use_features,
+        "run_tag": run_tag,
+        "arch": {
+            "n_features": len(feature_names),
+            "encoder_widths": [32, 64, 128, 256],
+            "decoder_widths": [128, 64, 32, 16],
+            "input_size": HYBRID_INPUT_SIZE,
+            "n_params": n_params,
+        },
+        "feature_names": feature_names,
+        "scaler_mean": scaler.mean_.tolist(),
+        "scaler_scale": scaler.scale_.tolist(),
+        "state_dict": best["state"],
+        "seed": seed,
+        "best_epoch": best["epoch"],
+        "best_val_ssim": best["ssim"],
+        "best_val_psnr": best["psnr"],
+        "loss": {"name": loss_name or HYBRID_LOSS,
+                 "lambda_ssim": lam if lam is not None else HYBRID_LAMBDA_SSIM},
+        "train_ids_fingerprint": ids_fingerprint(train_ids),
+        "val_ids_fingerprint": ids_fingerprint(val_ids),
+        "test_ids_fingerprint": ids_fingerprint(test_ids),
+        "n_train": len(ds_tr), "n_val": n_val,
+        "epochs_completed": epochs_completed,
+    }
+    torch.save(payload, ckpt_path)
+    shutil.copyfile(ckpt_path, durable_path)
+    print(f"  saved checkpoint (best epoch {best['epoch']}, "
+          f"val SSIM {best['ssim']:.4f}) -> {ckpt_path}", flush=True)
 
 
 def main() -> int:
