@@ -1,0 +1,8 @@
+removed_feature,kept_feature,pearson_r,abs_r,reason
+rms_contrast,entropy,0.91529,0.91529,|r| = 0.915 >= 0.9 with the higher-ranked feature 'entropy'
+mean_red,red_ratio,0.935674,0.935674,|r| = 0.936 >= 0.9 with the higher-ranked feature 'red_ratio'
+mean_green,mean_blue,0.982537,0.982537,|r| = 0.983 >= 0.9 with the higher-ranked feature 'mean_blue'
+std,entropy,0.91529,0.91529,|r| = 0.915 >= 0.9 with the higher-ranked feature 'entropy'
+dissimilarity,contrast,0.949527,0.949527,|r| = 0.950 >= 0.9 with the higher-ranked feature 'contrast'
+laplacian_variance,contrast,0.957183,0.957183,|r| = 0.957 >= 0.9 with the higher-ranked feature 'contrast'
+colorfulness,mean_saturation,0.966811,0.966811,|r| = 0.967 >= 0.9 with the higher-ranked feature 'mean_saturation'

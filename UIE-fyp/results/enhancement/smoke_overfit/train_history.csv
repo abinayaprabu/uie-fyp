@@ -1,0 +1,7 @@
+epoch,train_loss,epoch_seconds,val_ssim,val_psnr,val_l1,is_best
+1,0.240416,3.9,,,,False
+2,0.192416,3.5,,,,False
+3,0.180781,3.7,,,,False
+4,0.173292,3.7,,,,False
+5,0.164787,3.6,,,,False
+6,0.159717,3.7,,,,False

@@ -40,3 +40,9 @@ venv/
 .idea/
 .vscode/
 .DS_Store
+
+# ---- enhancement checkpoints kept as evidence (small, ~5 MB each) --------
+# Trained model weights for the final two runs; the generic *.pt rule above
+# would otherwise exclude them. Result directories are tracked on purpose so
+# a sandbox reset cannot destroy the only copy of the trained models.
+!**/results/enhancement/**/best_*.pt

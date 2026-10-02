@@ -1,0 +1,4 @@
+stage,n,features
+all features,25,red_ratio;dynamic_range;correlation;entropy;homogeneity;mean_blue;keypoint_density;gradient;rms_contrast;mean_red;edge_density;mean_value;mean;glcm_entropy;mean_green;contrast;std;dissimilarity;mean_saturation;laplacian_variance;glcm_variance;colorfulness;ASM;variance;energy
+"significant (BH-FDR < 0.05, SSIM or PSNR)",17,red_ratio;dynamic_range;correlation;entropy;mean_blue;rms_contrast;mean_red;mean_value;mean;mean_green;contrast;std;dissimilarity;mean_saturation;laplacian_variance;colorfulness;variance
+final (after |r| >= 0.90 redundancy removal),10,red_ratio;dynamic_range;correlation;entropy;mean_blue;mean_value;mean;contrast;mean_saturation;variance

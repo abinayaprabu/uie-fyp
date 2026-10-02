@@ -1,0 +1,4 @@
+feature_a,feature_b,pearson_r,note
+variance,std,0.9867545937022972,variance = std^2
+ASM,energy,0.9362426918187801,ASM = energy^2
+rms_contrast,std,1.0,rms_contrast = std / mean (up to sign)

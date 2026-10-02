@@ -151,3 +151,43 @@ ENH_LOSS = "l1"                # pixel-space reconstruction loss
 
 ENHANCED_DIR = DATASET_DIR / "enhanced-test"       # gitignored (derived images)
 ENHANCEMENT_RESULTS_DIR = RESULTS_DIR / "enhancement"
+
+# ===========================================================================
+# FEATURE-GUIDED ENHANCEMENT — Stage B/C (2026-10-02)
+# ---------------------------------------------------------------------------
+# The ONE proposed model: a 4-stage CNN encoder that keeps its spatial feature
+# maps, plus a handcrafted-feature branch that produces a FiLM conditioning
+# (per-channel scale/bias) for the 256x14x14 bottleneck, followed by a U-Net
+# decoder with skip connections.  The image-only baseline is the SAME class
+# with the feature branch switched off, so the ablation differs in exactly one
+# thing.  Nothing above this block is modified by this work.
+# ===========================================================================
+HYBRID_INPUT_SIZE = 224                 # letterboxed square input
+HYBRID_ENCODER_WIDTHS = (32, 64, 128, 256)   # 112 / 56 / 28 / 14 after pooling
+HYBRID_FEAT_HIDDEN = 32                 # feature MLP: Linear(k -> 32) -> ReLU -> Dropout
+HYBRID_FEAT_DROPOUT = 0.2
+# FiLM conditioning is initialised to IDENTITY (gamma = beta = 0 ->
+# conditioned = F * (1 + gamma) + beta = F).  At initialisation the proposed
+# model is therefore exactly the image-only model, and any later difference is
+# learned from the features -- this is what makes the ablation interpretable.
+HYBRID_DECODER_WIDTHS = (128, 64, 32, 16)
+HYBRID_BATCH_SIZE = 16
+HYBRID_MAX_EPOCHS = 80
+HYBRID_PATIENCE = 12                    # epochs without val-SSIM improvement
+HYBRID_VAL_EVERY = 2                    # full-resolution validation pass
+HYBRID_LR = 1e-3
+HYBRID_WEIGHT_DECAY = 1e-4
+HYBRID_SEED = 42
+HYBRID_LOSS = "l1"                      # "l1" or "l1_ssim"
+HYBRID_LAMBDA_SSIM = 0.0                # used only when HYBRID_LOSS == "l1_ssim"
+HYBRID_SSIM_WINDOW = 11                 # window for the differentiable SSIM loss
+# Run tags ("which run is which"): the image-only twin and the feature-guided
+# model must be trained with IDENTICAL settings, only the branch differs.
+HYBRID_RUN_IMAGE_ONLY = "enh224_imgonly"
+HYBRID_RUN_GUIDED = "enh224_featguided"
+
+# Stage A outputs consumed by Stage B (the selected feature set is produced by
+# scripts/run_statistics.py; nothing here is hard-coded to 14).
+STATS_RESULTS_DIR = RESULTS_DIR / "statistics"
+SELECTED_FEATURES_CSV = STATS_RESULTS_DIR / "selected_features.csv"
+
